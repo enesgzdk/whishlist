@@ -173,12 +173,6 @@
           <span class="hidden md:inline">Yedekle</span>
         </button>
 
-        <!-- GitHub Pages & Mobil Kurulum -->
-        <button onclick="openModal('pwaDeployModal')" title="GitHub Pages & Mobil Kurulum" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-white hover:bg-warmGray border border-sandBorder text-ink text-xs font-medium transition shadow-xs">
-          <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-          <span class="hidden sm:inline">Mobil & GitHub</span>
-        </button>
-
         <!-- Masaüstü Yeni Ürün Ekle Butonu -->
         <button onclick="openItemModal()" class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-sage hover:bg-[#25594b] text-white font-semibold text-xs transition shadow-sm">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -624,54 +618,6 @@
       </div>
     </div>
   </div>
-
-
-  <!-- ===================================================================== -->
-  <!-- MODAL 5: GITHUB PAGES & MOBİL UYGULAMA KURULUM MERKEZİ                -->
-  <!-- ===================================================================== -->
-  <div id="pwaDeployModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-ink/40 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-cardWhite border border-sandBorder rounded-3xl w-full max-w-2xl my-auto overflow-hidden shadow-2xl">
-      <div class="px-6 py-4 border-b border-sandBorder flex items-center justify-between bg-cream/60">
-        <div>
-          <h2 class="font-display font-bold text-base sm:text-lg text-ink">GitHub Pages & Mobil Uygulama Kurulumu</h2>
-          <p class="text-xs text-mutedInk">3 dosyayı GitHub depona yükle, telefonunda Chrome'dan uygulama olarak kur.</p>
-        </div>
-        <button onclick="closeModal('pwaDeployModal')" class="p-2 rounded-xl text-mutedInk hover:text-ink hover:bg-warmGray">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-
-      <div class="p-6 space-y-4 max-h-[82vh] overflow-y-auto text-xs">
-        <div class="bg-cream border border-sandBorder rounded-2xl p-4 space-y-2">
-          <div class="font-display font-bold text-sm text-sage">Nasıl Yayınlanır ve Telefona Kurulur?</div>
-          <ol class="list-decimal list-inside space-y-1.5 text-ink/90">
-            <li>GitHub'da yeni bir repository oluştur (örneğin <code class="bg-white border border-sandBorder px-1.5 py-0.5 rounded font-semibold">istek-panom</code>).</li>
-            <li>Aşağıdaki <strong>index.html</strong>, <strong>manifest.json</strong> ve <strong>sw.js</strong> dosyalarını indirip deponun ana dizinine yükle.</li>
-            <li>Repo ayarlarından <strong>Settings &rarr; Pages &rarr; Branch: main</strong> seçip kaydet.</li>
-            <li>Yayınlanan linki telefonunda Chrome ile açıp menüden <strong>"Uygulamayı Yükle / Ana Ekrana Ekle"</strong> seçeneğine dokun.</li>
-          </ol>
-        </div>
-
-        <div class="flex items-center gap-2 border-b border-sandBorder pb-2.5">
-          <button onclick="switchDeployTab('index')" id="tab-index" class="deploy-tab px-3.5 py-1.5 rounded-xl bg-sage text-white font-semibold">index.html</button>
-          <button onclick="switchDeployTab('manifest')" id="tab-manifest" class="deploy-tab px-3.5 py-1.5 rounded-xl bg-warmGray text-ink font-medium">manifest.json</button>
-          <button onclick="switchDeployTab('sw')" id="tab-sw" class="deploy-tab px-3.5 py-1.5 rounded-xl bg-warmGray text-ink font-medium">sw.js</button>
-        </div>
-
-        <div class="space-y-2">
-          <div class="flex items-center justify-between gap-2">
-            <span id="deployFileDesc" class="text-mutedInk">Ana uygulama dosyası.</span>
-            <div class="flex items-center gap-2 shrink-0">
-              <button onclick="copyDeployCode()" class="px-3 py-1.5 rounded-xl bg-warmGray hover:bg-sandBorder/70 text-ink font-semibold text-xs">Kopyala</button>
-              <button onclick="downloadDeployFile()" class="px-3.5 py-1.5 rounded-xl bg-sage text-white font-semibold text-xs">Dosyayı İndir</button>
-            </div>
-          </div>
-          <textarea id="deployCodeBox" readonly rows="8" class="w-full bg-cream border border-sandBorder rounded-2xl p-3.5 font-mono text-[11px] text-ink focus:outline-none"></textarea>
-        </div>
-      </div>
-    </div>
-  </div>
-
 
   <!-- ===================================================================== -->
   <!-- JAVASCRIPT UYGULAMA MOTORU (Author: Enes Furkan Gözüdik)              -->
