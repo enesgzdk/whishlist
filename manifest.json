@@ -1,0 +1,19 @@
+{
+  "name": "İstek Panosu",
+  "short_name": "İstek Panosu",
+  "description": "Kişisel istek listesi, karar matrisi ve öncelik sıralama panosu",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF8F5",
+  "theme_color": "#FAF8F5",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
