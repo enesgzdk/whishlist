@@ -43,7 +43,9 @@ module.exports = async function handler(req, res) {
 
     const { action, url, q, id } = req.query;
 
+    // ==========================================
     // 1. SUPABASE VERİTABANI İŞLEMLERİ
+    // ==========================================
     if (action === 'list' || req.method === 'POST' || req.method === 'DELETE') {
       if (!SUPABASE_URL || !SUPABASE_KEY) {
         return res.status(500).json({ ok: false, error: 'SUPABASE_URL veya SUPABASE_SERVICE_ROLE_KEY eksik.' });
@@ -97,7 +99,9 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    // ==========================================
     // 2. CANLI ARAMA ÖNERİLERİ (?q=...)
+    // ==========================================
     if (q) {
       const query = encodeURIComponent(q.trim());
       const [suggestRes, ddgRes] = await Promise.allSettled([
@@ -125,7 +129,9 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, items });
     }
 
+    // ==========================================
     // 3. ÜRÜN LİNKİNDEN VERİ ÇEKME (?url=...)
+    // ==========================================
     if (url) {
       let targetUrl = new URL(url).toString();
       const asinMatch = targetUrl.match(/(?:dp|gp\/product)\/([A-Z0-9]{10})/i);
@@ -135,137 +141,94 @@ module.exports = async function handler(req, res) {
         targetUrl = `https://${baseHost}/dp/${asinMatch[1]}`;
       }
 
-      const decodeHtml = (str) =>
-        str.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-
-      const response = await fetch(targetUrl, {
-        redirect: 'follow',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-          'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
-          'Cache-Control': 'no-cache'
-        }
-      });
-
-      const finalUrl = response.url || targetUrl;
-      const html = await response.text();
-
-      const isBlocked =
-        response.status === 403 ||
-        response.status === 503 ||
-        html.includes('Üzgünüz') ||
-        html.includes('Hepsiburada Güvenlik') ||
-        html.includes('api-services-support@amazon.com') ||
-        html.includes('Güvenlik Doğrulaması') ||
-        html.includes('cf-browser-verification');
+      const isBlockedText = (txt) => {
+        if (!txt) return true;
+        const low = txt.toLowerCase();
+        return (
+          low.includes('üzgünüz') ||
+          low.includes('güvenlik') ||
+          low.includes('robot') ||
+          low.includes('captcha') ||
+          low.includes('access denied') ||
+          low.includes('just a moment') ||
+          low === 'amazon.com.tr' ||
+          low === 'hepsiburada' ||
+          low === 'trendyol'
+        );
+      };
 
       let title = '';
       let image = '';
       let price = '';
+      let resolvedUrl = targetUrl;
 
-      if (!isBlocked) {
-        const getMeta = (prop) => {
-          const r1 = new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i');
-          const r2 = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${prop}["']`, 'i');
-          const m = html.match(r1) || html.match(r2);
-          return m ? decodeHtml(m[1]) : '';
-        };
-
-        title = getMeta('og:title') || getMeta('twitter:title') || '';
-        image = getMeta('og:image') || getMeta('twitter:image') || '';
-        price = getMeta('product:price:amount') || getMeta('og:price:amount') || '';
-
-        if (!title) {
-          const tm = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-          if (tm) title = decodeHtml(tm[1].trim());
+      // KATMAN 1: Microlink Headless Metadata API (Bot korumalarını gerçek tarayıcı IP'siyle aşar)
+      try {
+        const mlRes = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}`);
+        if (mlRes.ok) {
+          const mlJson = await mlRes.json();
+          if (mlJson.status === 'success' && mlJson.data) {
+            const d = mlJson.data;
+            if (d.url) resolvedUrl = d.url;
+            if (d.title && !isBlockedText(d.title)) title = d.title;
+            if (d.image && d.image.url) image = d.image.url;
+            if (d.description) {
+              const descPrice = d.description.match(/([\d.]+(?:,\d{2})?)\s*(?:TL|₺)/i);
+              if (descPrice) price = descPrice[1];
+            }
+          }
         }
+      } catch (_) {}
 
-        if (finalUrl.includes('amazon.')) {
-          const pTitle = html.match(/id=["']productTitle["'][^>]*>([\s\S]*?)<\/span>/i);
-          if (pTitle) title = decodeHtml(pTitle[1].replace(/<[^>]+>/g, '').trim());
-
-          const pImg = html.match(/id=["']landingImage["'][^>]+src=["']([^"']+)["']/i) ||
-                       html.match(/"hiRes":"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+)"/i) ||
-                       html.match(/"large":"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+)"/i);
-          if (pImg) image = pImg[1];
-
-          const pPrice = html.match(/class=["']a-price-whole["'][^>]*>([\d.,]+)/i);
-          if (pPrice) price = pPrice[1];
-        }
-
-        const jsonLdMatches = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
-        for (const block of jsonLdMatches) {
-          try {
-            const parsed = JSON.parse(block.replace(/<script[^>]*>|<\/script>/gi, '').trim());
-            const list = Array.isArray(parsed) ? parsed : (parsed['@graph'] ? parsed['@graph'] : [parsed]);
-            const product = list.find(x => x['@type'] === 'Product' || (Array.isArray(x['@type']) && x['@type'].includes('Product')));
-            if (product) {
-              if (product.name) title = decodeHtml(product.name);
-              if (product.image) image = Array.isArray(product.image) ? product.image[0] : (product.image.url || product.image);
-              if (product.offers) {
-                const offer = Array.isArray(product.offers) ? product.offers[0] : product.offers;
-                const rawPrice = offer.price || offer.lowPrice || '';
-                if (rawPrice) price = String(rawPrice);
+      // KATMAN 2: Jina Reader Proxy (Eğer başlık veya fiyat eksik kaldıysa)
+      if (!title || isBlockedText(title) || !price) {
+        try {
+          const jinaRes = await fetch(`https://r.jina.ai/${resolvedUrl}`, {
+            headers: { 'Accept': 'text/plain' }
+          });
+          if (jinaRes.ok) {
+            const md = await jinaRes.text();
+            const titleLine = md.match(/^Title:\s*(.+)$/m);
+            if (titleLine && !isBlockedText(titleLine[1].trim()) && (!title || isBlockedText(title))) {
+              title = titleLine[1].trim();
+            }
+            if (!price && !isBlockedText(md.slice(0, 500))) {
+              const mdPrice = md.match(/([\d.]{2,}(?:,\d{2})?)\s*(?:TL|₺)/i);
+              if (mdPrice) price = mdPrice[1];
+            }
+            if (!image) {
+              const imgMatch = md.match(/!\[[^\]]*\]\((https:\/\/[^)]+\.(?:jpg|jpeg|png|webp)[^)]*)\)/i);
+              if (imgMatch && !imgMatch[1].includes('logo') && !imgMatch[1].includes('icon')) {
+                image = imgMatch[1];
               }
             }
-          } catch (_) {}
-        }
-      }
-
-      // 1. Kurtarma: Amazon ASIN kodu ile arama
-      const finalAsin = finalUrl.match(/(?:dp|gp\/product)\/([A-Z0-9]{10})/i);
-      if ((isBlocked || !title || title.toLowerCase().includes('üzgünüz')) && finalAsin) {
-        try {
-          const ddgRes = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(`"amazon.com.tr" "${finalAsin[1]}"`)}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-          });
-          const ddgHtml = await ddgRes.text();
-          const resultTitle = ddgHtml.match(/class="result__a"[^>]*>([\s\S]*?)<\/a>/i);
-          if (resultTitle) {
-            title = decodeHtml(resultTitle[1].replace(/<[^>]+>/g, '').trim());
           }
-          const snippetPrice = ddgHtml.match(/([\d.]+(?:,\d{2})?)\s*(?:TL|₺)/i);
-          if (snippetPrice && !price) price = snippetPrice[1];
         } catch (_) {}
       }
 
-      // 2. Kurtarma: Hepsiburada ürün kodu (HBCV...) veya yönlenen URL slug'ı ile kurtarma
-      if ((isBlocked || !title || title.toLowerCase().includes('güvenlik')) && (finalUrl.includes('hepsiburada.com') || targetUrl.includes('hb.biz'))) {
-        const hbCodeMatch = finalUrl.match(/-(?:p|pm)-([A-Z0-9]+)/i);
-        if (hbCodeMatch) {
-          try {
-            const ddgRes = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(`"hepsiburada.com" "${hbCodeMatch[1]}"`)}`, {
-              headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-            });
-            const ddgHtml = await ddgRes.text();
-            const resultTitle = ddgHtml.match(/class="result__a"[^>]*>([\s\S]*?)<\/a>/i);
-            if (resultTitle) {
-              title = decodeHtml(resultTitle[1].replace(/<[^>]+>/g, '').trim());
-            }
-            const snippetPrice = ddgHtml.match(/([\d.]+(?:,\d{2})?)\s*(?:TL|₺)/i);
-            if (snippetPrice && !price) price = snippetPrice[1];
-          } catch (_) {}
-        }
-
-        if (!title || title.toLowerCase().includes('güvenlik')) {
-          const slugMatch = new URL(finalUrl).pathname.match(/^\/([a-z0-9-]+?)-(?:p|pm)-[a-z0-9]+/i);
-          if (slugMatch) {
-            title = slugMatch[1]
-              .split('-')
-              .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-              .join(' ');
+      // KATMAN 3: URL Slug'ından Ürün Adı Kurtarma (app.hb.biz -> hepsiburada.com/urun-adi-p-HBCV... vb.)
+      if (!title || isBlockedText(title)) {
+        try {
+          const parsedUrl = new URL(resolvedUrl);
+          // Hepsiburada slug: /urun-adi-p-HBCV...
+          const hbSlug = parsedUrl.pathname.match(/^\/([a-z0-9-]+?)-(?:p|pm)-[a-z0-9]+/i);
+          // Trendyol slug: /marka/urun-adi-p-123456
+          const tySlug = parsedUrl.pathname.match(/\/([a-z0-9-]+?)-p-\d+/i);
+          const slug = (hbSlug && hbSlug[1]) || (tySlug && tySlug[1]);
+          if (slug) {
+            title = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
           }
-        }
+        } catch (_) {}
       }
 
-      if (title && !image && !title.toLowerCase().includes('güvenlik') && !title.toLowerCase().includes('üzgünüz')) {
+      // Temizlik ve Son Kontroller
+      title = title
+        .replace(/^Amazon\.com\.tr\s*:\s*/i, '')
+        .replace(/\s*[-|•:]\s*(Trendyol|Hepsiburada(?:\.com)?|Amazon\.com\.tr|n11|Akakçe|Çiçeksepeti|Fiyatı, Yorumları).*$/i, '')
+        .trim();
+
+      if (title && !isBlockedText(title) && !image) {
         image = `https://tse2.mm.bing.net/th?q=${encodeURIComponent(title)}&w=400&h=400&c=7&rs=1&p=0`;
-      }
-
-      if (image && image.startsWith('/')) {
-        const base = new URL(finalUrl);
-        image = `${base.protocol}//${base.host}${image}`;
       }
 
       let numericPrice = 0;
@@ -280,15 +243,10 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      title = title
-        .replace(/^Amazon\.com\.tr\s*:\s*/i, '')
-        .replace(/\s*[-|•:]\s*(Trendyol|Hepsiburada(?:\.com)?|Amazon\.com\.tr|n11|Akakçe|Çiçeksepeti).*$/i, '')
-        .trim();
-
-      if (!title || title.toLowerCase().includes('üzgünüz') || title.toLowerCase().includes('güvenlik')) {
+      if (!title || isBlockedText(title)) {
         return res.status(200).json({
           ok: false,
-          error: 'Mağaza güvenlik koruması nedeniyle otomatik okunamadı; ürün adını yukarıdaki kutuya yazarak arayabilirsin.'
+          error: 'Linkteki bilgi okunamadı, ürün adını yukarıdaki kutuya yazarak arayabilirsin.'
         });
       }
 
