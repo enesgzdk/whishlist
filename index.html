@@ -1,1591 +1,677 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <link rel="apple-touch-icon" href="./icon-512.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#FAF8F5" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="İstek Panom" />
+  <title>İstek Panosu — Kişisel Kürasyon</title>
   <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="apple-touch-icon" href="./icon-512.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <meta name="theme-color" content="#FAF8F5">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Fraunces"', 'serif'],
+          },
+          colors: {
+            cream: '#FAF8F5',
+            sand: '#F2EDE4',
+            sage: '#5B7C67',
+            sageDark: '#43604E',
+            terracotta: '#D97757',
+            ink: '#24221F',
+            muted: '#736D65'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #FAF8F5; color: #24221F; -webkit-tap-highlight-color: transparent; }
+    .card-shadow { box-shadow: 0 4px 20px -2px rgba(36, 34, 31, 0.05); }
+    input[type="range"] { accent-color: #5B7C67; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #DCD5C9; border-radius: 99px; }
+  </style>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
     }
   </script>
-  <title>İstek Panom — Kişisel Karar & Öncelik Listesi</title>
-  <!-- Author: Enes Furkan Gözüdik -->
-
-  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            cream: '#FAF8F5',
-            warmGray: '#F2EFE9',
-            cardWhite: '#FFFFFF',
-            ink: '#1E2421',
-            mutedInk: '#646E68',
-            sage: '#2F6F5E',
-            sageLight: '#E8F2EE',
-            terracotta: '#D96B43',
-            terracottaLight: '#FDF0EB',
-            sandBorder: '#E6E1D8'
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Plus Jakarta Sans', 'sans-serif'],
-          },
-          boxShadow: {
-            soft: '0 4px 20px -2px rgba(30, 36, 33, 0.05)',
-            card: '0 2px 12px -1px rgba(30, 36, 33, 0.04), 0 1px 3px 0 rgba(30, 36, 33, 0.03)',
-            float: '0 12px 28px -4px rgba(47, 111, 94, 0.28)'
-          }
-        },
-      },
-    };
-  </script>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      background-color: #FAF8F5;
-      color: #1E2421;
-      font-family: 'Inter', sans-serif;
-      overflow-x: hidden;
-    }
-
-    /* Yumuşak Kaydırma Çubuğu */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #FAF8F5;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #D5CFC4;
-      border-radius: 999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #2F6F5E;
-    }
-
-    /* Zarif Kaydırıcılar (Sliders) */
-    input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 6px;
-      background: #E6E1D8;
-      border-radius: 999px;
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #2F6F5E;
-      cursor: pointer;
-      border: 3px solid #FFFFFF;
-      box-shadow: 0 2px 6px rgba(30, 36, 33, 0.2);
-      transition: transform 0.15s ease, background-color 0.15s ease;
-    }
-    input[type="range"]::-webkit-slider-thumb:hover {
-      transform: scale(1.1);
-      background: #245749;
-    }
-    input[type="range"]::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #2F6F5E;
-      cursor: pointer;
-      border: 3px solid #FFFFFF;
-      box-shadow: 0 2px 6px rgba(30, 36, 33, 0.2);
-    }
-
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-  </style>
 </head>
-<body class="bg-cream min-h-screen text-ink pb-28 sm:pb-16 antialiased">
+<body class="min-h-screen pb-24">
 
-  <!-- ÜST GEZİNTİ ÇUBUĞU -->
-  <header class="sticky top-0 z-30 bg-cream/90 backdrop-blur-md border-b border-sandBorder">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
-      <!-- Marka & Başlık -->
+  <!-- Üst Menü -->
+  <header class="sticky top-0 z-30 bg-cream/90 backdrop-blur-md border-b border-[#EAE4DA]">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-sage text-white flex items-center justify-center shadow-sm">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <div class="w-9 h-9 rounded-xl bg-sage flex items-center justify-center text-white shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
           </svg>
         </div>
         <div>
-          <h1 class="font-display font-bold text-base sm:text-lg tracking-tight text-ink">İstek Panom</h1>
-          <p class="text-[11px] text-mutedInk hidden sm:block">Kendin için seçtiklerin, senin öncelik sıran</p>
+          <h1 class="font-serif text-lg sm:text-xl font-semibold tracking-tight text-ink leading-none">İstek Panosu</h1>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span id="syncDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span id="syncText" class="text-[11px] text-muted font-medium">Bağlanıyor...</span>
+          </div>
         </div>
       </div>
 
-      <!-- Üst Aksiyon Butonları -->
-      <div class="flex items-center gap-1.5 sm:gap-2">
-        <!-- Mobil Uygulama Yükle Butonu (Chrome PWA) -->
-        <button id="installPromptBtn" onclick="triggerNativeInstall()" class="hidden items-center gap-1.5 px-3 py-2 rounded-xl bg-sageLight text-sage hover:bg-sage hover:text-white text-xs font-semibold transition">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          <span>Uygulamayı Yükle</span>
+      <div class="flex items-center gap-2">
+        <button onclick="openBackupModal()" class="px-3 py-2 rounded-xl bg-white border border-[#E5DFD5] text-xs sm:text-sm font-medium text-ink hover:bg-sand transition flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-sage" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          <span>Yedek</span>
         </button>
-
-        <!-- Etiketler -->
-        <button onclick="openModal('tagsModal')" title="Öncelik Etiketleri" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-white hover:bg-warmGray border border-sandBorder text-ink text-xs font-medium transition shadow-xs">
-          <svg class="w-4 h-4 text-terracotta" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-          <span class="hidden lg:inline">Etiketler</span>
-        </button>
-
-        <!-- Puan Formülü -->
-        <button onclick="openModal('formulaModal')" title="Skor Formülü" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-white hover:bg-warmGray border border-sandBorder text-ink text-xs font-medium transition shadow-xs">
-          <svg class="w-4 h-4 text-sage" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-          <span class="hidden md:inline">Formül</span>
-        </button>
-
-        <!-- JSON Yedek -->
-        <button onclick="openModal('backupModal')" title="JSON Yedekle / Geri Yükle" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-white hover:bg-warmGray border border-sandBorder text-ink text-xs font-medium transition shadow-xs">
-          <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-          <span class="hidden md:inline">Yedekle</span>
-        </button>
-
-        <!-- Masaüstü Yeni Ürün Ekle Butonu -->
-        <button onclick="openItemModal()" class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-sage hover:bg-[#25594b] text-white font-semibold text-xs transition shadow-sm">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-          <span>Ürün Ekle</span>
+        <button onclick="openAddModal()" class="px-4 py-2 rounded-xl bg-sage hover:bg-sageDark text-white text-xs sm:text-sm font-semibold transition shadow-sm flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>Yeni İstek</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- ANA İÇERİK ALANI -->
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+    <!-- Özet Kartları -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE4DA] card-shadow">
+        <div class="text-xs text-muted font-medium">Aktif İstek</div>
+        <div id="statActiveCount" class="text-2xl font-bold text-ink mt-1">0</div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE4DA] card-shadow">
+        <div class="text-xs text-muted font-medium">Aktif Liste Tutarı</div>
+        <div id="statActiveTotal" class="text-2xl font-bold text-ink mt-1">0 ₺</div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE4DA] card-shadow">
+        <div class="text-xs text-muted font-medium">Acil Alınacaklar</div>
+        <div id="statUrgentCount" class="text-2xl font-bold text-terracotta mt-1">0</div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE4DA] card-shadow">
+        <div class="text-xs text-muted font-medium">Alınanlar</div>
+        <div id="statPurchasedCount" class="text-2xl font-bold text-sage mt-1">0</div>
+      </div>
+    </div>
 
-    <!-- MOTİVASYON & ÖZET KARTLARI -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-      <div class="bg-cardWhite border border-sandBorder rounded-2xl p-4 shadow-card">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-medium text-mutedInk">Listedeki İstekler</span>
-          <span class="w-7 h-7 rounded-lg bg-sageLight text-sage flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-          </span>
-        </div>
-        <div class="mt-2 flex items-baseline gap-1.5">
-          <span id="statActiveCount" class="font-display font-bold text-2xl sm:text-3xl text-ink">0</span>
-          <span class="text-xs text-mutedInk">ürün</span>
-        </div>
+    <!-- Filtre Çubuğu -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div class="flex items-center gap-2 overflow-x-auto pb-1" id="tagFilters">
+        <button onclick="setFilter('ALL')" data-filter="ALL" class="filter-btn active px-3.5 py-1.5 rounded-full text-xs font-semibold bg-ink text-white transition">Tümü</button>
+        <button onclick="setFilter('Acil Alınacak')" data-filter="Acil Alınacak" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white border border-[#E5DFD5] text-muted hover:text-ink transition">🔥 Acil Alınacak</button>
+        <button onclick="setFilter('Yakın Zamanda')" data-filter="Yakın Zamanda" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white border border-[#E5DFD5] text-muted hover:text-ink transition">⏳ Yakın Zamanda</button>
+        <button onclick="setFilter('Sonra Alınır')" data-filter="Sonra Alınır" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white border border-[#E5DFD5] text-muted hover:text-ink transition">🌿 Sonra Alınır</button>
+        <button onclick="setFilter('Keyfi / Olsa da Olur')" data-filter="Keyfi / Olsa da Olur" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white border border-[#E5DFD5] text-muted hover:text-ink transition">✨ Keyfi</button>
+        <button onclick="setFilter('PURCHASED')" data-filter="PURCHASED" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white border border-[#E5DFD5] text-muted hover:text-ink transition">✅ Alınanlar</button>
       </div>
 
-      <div class="bg-cardWhite border border-sandBorder rounded-2xl p-4 shadow-card">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-medium text-mutedInk">Acil Alınacaklar</span>
-          <span class="w-7 h-7 rounded-lg bg-terracottaLight text-terracotta flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          </span>
-        </div>
-        <div class="mt-2 flex items-baseline gap-1.5">
-          <span id="statUrgentCount" class="font-display font-bold text-2xl sm:text-3xl text-terracotta">0</span>
-          <span class="text-xs text-mutedInk">öncelikli</span>
-        </div>
-      </div>
+      <select id="categoryFilter" onchange="renderItems()" class="px-3 py-1.5 rounded-xl bg-white border border-[#E5DFD5] text-xs font-medium text-ink focus:outline-none">
+        <option value="ALL">Tüm Kategoriler</option>
+      </select>
+    </div>
 
-      <div class="bg-cardWhite border border-sandBorder rounded-2xl p-4 shadow-card">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-medium text-mutedInk">Liste Toplam Değeri</span>
-          <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-          </span>
-        </div>
-        <div class="mt-2">
-          <span id="statTotalValue" class="font-display font-bold text-xl sm:text-2xl text-ink">0 ₺</span>
-        </div>
-      </div>
+    <!-- Ürün Listesi -->
+    <div id="itemsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
 
-      <div class="bg-cardWhite border border-sandBorder rounded-2xl p-4 shadow-card">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-medium text-mutedInk">Kendine Aldıkların</span>
-          <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-          </span>
-        </div>
-        <div class="mt-2 flex items-baseline gap-1.5">
-          <span id="statPurchasedCount" class="font-display font-bold text-2xl sm:text-3xl text-emerald-700">0</span>
-          <span class="text-xs text-mutedInk">tamamlandı</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- FİLTRE, KATEGORİ, ARAMA VE SIRALAMA ÇUBUĞU -->
-    <section class="bg-cardWhite border border-sandBorder rounded-2xl p-3.5 sm:p-4 shadow-card space-y-3.5">
-      
-      <!-- Öncelik Etiketi Sekmeleri -->
-      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1" id="filterPillsContainer">
-        <!-- Dinamik olarak doldurulur -->
-      </div>
-
-      <!-- Arama, Kategori Filtresi, Sıralama ve Hızlı JSON İndirme -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5 pt-3 border-t border-sandBorder/80">
-        
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
-          <!-- Arama -->
-          <div class="relative flex-1 max-w-xs">
-            <svg class="w-4 h-4 text-mutedInk absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" id="searchInput" oninput="renderGrid()" placeholder="Ürün adı veya not ara..." class="w-full bg-cream border border-sandBorder rounded-xl pl-9 pr-3 py-2 text-xs text-ink placeholder-mutedInk focus:outline-none focus:border-sage focus:bg-white transition" />
-          </div>
-
-          <!-- Kategori Filtresi -->
-          <select id="categoryFilterSelect" onchange="renderGrid()" class="bg-cream border border-sandBorder rounded-xl px-3 py-2 text-xs text-ink focus:outline-none focus:border-sage focus:bg-white transition">
-            <option value="ALL">Tüm Kategoriler</option>
-            <option value="Teknoloji">Teknoloji</option>
-            <option value="Giyim & Stil">Giyim & Stil</option>
-            <option value="Ev & Yaşam">Ev & Yaşam</option>
-            <option value="Hobi & Keyif">Hobi & Keyif</option>
-            <option value="Kişisel Bakım">Kişisel Bakım</option>
-            <option value="Deneyim & Tatil">Deneyim & Tatil</option>
-            <option value="Diğer">Diğer</option>
-          </select>
-        </div>
-
-        <!-- Sıralama & Hızlı JSON -->
-        <div class="flex flex-wrap items-center gap-2">
-          <select id="sortSelect" onchange="renderGrid()" class="flex-1 sm:flex-initial bg-cream border border-sandBorder rounded-xl px-3 py-2 text-xs text-ink font-medium focus:outline-none focus:border-sage focus:bg-white transition">
-            <option value="score_desc">Önem Skoruna Göre (En Önemli Üstte)</option>
-            <option value="score_asc">Önem Skoruna Göre (Düşükten Yükseğe)</option>
-            <option value="price_desc">Fiyata Göre (Yüksekten Düşüğe)</option>
-            <option value="price_asc">Fiyata Göre (Düşükten Yükseğe)</option>
-            <option value="newest">Eklenme Tarihi (En Yeni)</option>
-          </select>
-
-          <button onclick="exportBackupJSON()" title="Listeyi JSON Olarak İndir" class="px-3 py-2 rounded-xl bg-warmGray hover:bg-sandBorder/70 text-ink text-xs font-medium transition flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-sage" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            <span>JSON İndir</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ÜRÜN KARTLARI IZGARASI -->
-    <section id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-      <!-- Dinamik olarak doldurulur -->
-    </section>
-
-    <!-- BOŞ DURUM EKRANI (SIFIR ÜRÜN İLE AÇILIŞ) -->
-    <section id="emptyState" class="hidden bg-cardWhite border border-sandBorder rounded-3xl p-8 sm:p-12 text-center shadow-soft max-w-2xl mx-auto">
-      <div class="w-16 h-16 rounded-2xl bg-sageLight text-sage mx-auto flex items-center justify-center mb-4">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+    <!-- Boş Durum -->
+    <div id="emptyState" class="hidden bg-white rounded-3xl border border-[#EAE4DA] p-12 text-center max-w-md mx-auto mt-8 card-shadow">
+      <div class="w-14 h-14 rounded-2xl bg-sand text-sage flex items-center justify-center mx-auto mb-4">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
         </svg>
       </div>
-      <h2 id="emptyStateTitle" class="font-display font-bold text-xl text-ink">İstek Panon Şu An Tertemiz</h2>
-      <p id="emptyStateDesc" class="text-sm text-mutedInk max-w-md mx-auto mt-2 leading-relaxed">
-        Uzun zamandır kendine almak istediğin şeyleri buraya ekle; ihtiyaç, heves ve aciliyet puanlarını ver, senin için en doğru öncelik sırasını birlikte oluşturalım.
-      </p>
-      <div class="pt-6 flex flex-wrap items-center justify-center gap-3">
-        <button onclick="openItemModal()" class="px-6 py-3 rounded-xl bg-sage hover:bg-[#25594b] text-white font-semibold text-sm transition shadow-sm flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-          <span>İlk Ürünü Ekle</span>
-        </button>
-        <label class="px-5 py-3 rounded-xl bg-warmGray hover:bg-sandBorder/70 text-ink font-medium text-sm cursor-pointer transition">
-          <span>JSON Yedeği Yükle</span>
-          <input type="file" accept=".json" onchange="importBackupJSON(event)" class="hidden" />
-        </label>
-      </div>
-    </section>
-
+      <h3 class="font-serif text-lg font-semibold text-ink">Listen şu an tertemiz</h3>
+      <p class="text-sm text-muted mt-1.5 leading-relaxed">Aklındaki ilk ürünü ekle; linkini yapıştır veya adını arat, öncelik puanını hesaplayıp sıraya dizelim.</p>
+      <button onclick="openAddModal()" class="mt-5 px-5 py-2.5 rounded-xl bg-sage hover:bg-sageDark text-white text-sm font-semibold transition">İlk İsteğini Ekle</button>
+    </div>
   </main>
 
-  <!-- MOBİL YÜZEN EKLEME BUTONU -->
-  <button onclick="openItemModal()" aria-label="Yeni Ürün Ekle" class="sm:hidden fixed bottom-5 right-5 z-30 flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-sage text-white font-display font-bold text-sm shadow-float active:scale-95 transition">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-    <span>Ürün Ekle</span>
-  </button>
-
-  <!-- BİLDİRİM (TOAST) ALANI -->
-  <div id="toastContainer" class="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none w-full max-w-sm px-4"></div>
-
-
-  <!-- ===================================================================== -->
-  <!-- MODAL 1: YENİ ÜRÜN EKLE / DÜZENLE                                     -->
-  <!-- ===================================================================== -->
-  <div id="itemModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-ink/40 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-cardWhite border border-sandBorder rounded-3xl w-full max-w-xl my-auto overflow-hidden shadow-2xl">
-      <div class="px-6 py-4 border-b border-sandBorder flex items-center justify-between bg-cream/60">
-        <h2 id="itemModalTitle" class="font-display font-bold text-lg text-ink">Yeni Ürün Ekle</h2>
-        <button onclick="closeModal('itemModal')" class="p-2 rounded-xl text-mutedInk hover:text-ink hover:bg-warmGray transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
+  <!-- Ürün Ekle / Düzenle Modalı -->
+  <div id="itemModal" class="fixed inset-0 z-50 hidden bg-ink/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-cream w-full max-w-lg rounded-t-3xl sm:rounded-3xl border border-[#E5DFD5] shadow-2xl max-h-[92vh] overflow-y-auto p-5 sm:p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 id="modalTitle" class="font-serif text-xl font-semibold text-ink">Yeni İstek Ekle</h2>
+        <button onclick="closeAddModal()" class="w-8 h-8 rounded-full bg-sand flex items-center justify-center text-muted hover:text-ink">✕</button>
       </div>
 
-      <form id="itemForm" onsubmit="saveItem(event)" class="p-6 space-y-4 max-h-[84vh] overflow-y-auto">
-        <input type="hidden" id="itemId" />
+      <!-- Akıllı Arama & Link Yapıştırma Alanı -->
+      <div class="bg-white p-3.5 rounded-2xl border border-[#E5DFD5] mb-4 relative">
+        <label class="block text-[11px] font-semibold uppercase tracking-wider text-sage mb-1.5">Hızlı Arama veya Ürün Linki Yapıştır</label>
+        <div class="flex gap-2">
+          <input id="smartInput" type="text" oninput="handleSmartInput(this.value)" placeholder="Örn: AirPods Pro 3 yaz veya Trendyol/Amazon linki yapıştır..." class="flex-1 px-3 py-2 rounded-xl bg-cream border border-[#E5DFD5] text-sm focus:outline-none focus:border-sage" />
+          <button type="button" onclick="triggerSmartFetch()" id="smartFetchBtn" class="px-3.5 py-2 rounded-xl bg-ink text-white text-xs font-semibold hover:opacity-90 transition shrink-0">Getir</button>
+        </div>
+        <div id="smartStatus" class="text-[11px] text-muted mt-1.5 hidden"></div>
+        <div id="searchDropdown" class="hidden mt-2 border-t border-[#EAE4DA] pt-2 space-y-1.5 max-h-56 overflow-y-auto"></div>
+      </div>
 
-        <!-- Ürün Adı -->
+      <form id="itemForm" onsubmit="saveItem(event)" class="space-y-4">
+        <input type="hidden" id="editId" />
+
         <div>
-          <label class="block text-xs font-semibold text-ink mb-1.5">Ürün Adı *</label>
-          <input type="text" id="itemTitle" required placeholder="Örn: Kablosuz Kulaklık, Kahve Makinesi, Koşu Ayakkabısı..." class="w-full bg-cream border border-sandBorder rounded-xl px-3.5 py-2.5 text-sm text-ink placeholder-mutedInk/70 focus:outline-none focus:border-sage focus:bg-white transition" />
+          <label class="block text-xs font-semibold text-ink mb-1">Ürün Adı *</label>
+          <input id="fTitle" required type="text" placeholder="Örn: Sony WH-1000XM5" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5DFD5] text-sm focus:outline-none focus:border-sage" />
         </div>
 
-        <!-- Öncelik Etiketi & Kategori -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-xs font-semibold text-ink">Öncelik Durumu</label>
-              <button type="button" onclick="openModal('tagsModal')" class="text-[11px] font-semibold text-sage hover:underline">+ Özel Etiket</button>
-            </div>
-            <select id="itemTag" onchange="syncSliderLabels()" class="w-full bg-cream border border-sandBorder rounded-xl px-3.5 py-2.5 text-sm text-ink focus:outline-none focus:border-sage focus:bg-white transition">
-              <!-- Dinamik -->
-            </select>
+            <label class="block text-xs font-semibold text-ink mb-1">Fiyat (₺)</label>
+            <input id="fPrice" type="number" min="0" step="1" placeholder="0" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5DFD5] text-sm focus:outline-none focus:border-sage" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-ink mb-1.5">Kategori</label>
-            <select id="itemCategory" class="w-full bg-cream border border-sandBorder rounded-xl px-3.5 py-2.5 text-sm text-ink focus:outline-none focus:border-sage focus:bg-white transition">
-              <option value="Teknoloji">Teknoloji</option>
-              <option value="Giyim & Stil">Giyim & Stil</option>
-              <option value="Ev & Yaşam">Ev & Yaşam</option>
-              <option value="Hobi & Keyif">Hobi & Keyif</option>
-              <option value="Kişisel Bakım">Kişisel Bakım</option>
-              <option value="Deneyim & Tatil">Deneyim & Tatil</option>
-              <option value="Diğer">Diğer</option>
-            </select>
+            <label class="block text-xs font-semibold text-ink mb-1">Kategori</label>
+            <input id="fCategory" list="catSuggestions" type="text" placeholder="Teknoloji, Giyim, Hobi..." class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5DFD5] text-sm focus:outline-none focus:border-sage" />
+            <datalist id="catSuggestions">
+              <option value="Teknoloji">
+              <option value="Giyim & Ayakkabı">
+              <option value="Ev & Yaşam">
+              <option value="Hobi & Spor">
+              <option value="Kişisel Bakım">
+            </datalist>
           </div>
         </div>
 
-        <!-- Fiyat & Ürün Linki -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div>
-            <label class="block text-xs font-semibold text-ink mb-1.5">Fiyat (₺) *</label>
-            <input type="number" id="itemPrice" required min="0" step="any" placeholder="Örn: 12500" oninput="syncSliderLabels()" class="w-full bg-cream border border-sandBorder rounded-xl px-3.5 py-2.5 text-sm font-medium text-ink placeholder-mutedInk/70 focus:outline-none focus:border-sage focus:bg-white transition" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-ink mb-1.5">Ürün Linki <span class="font-normal text-mutedInk">(Opsiyonel)</span></label>
-            <input type="url" id="itemUrl" placeholder="https://..." class="w-full bg-cream border border-sandBorder rounded-xl px-3.5 py-2.5 text-sm text-ink placeholder-mutedInk/70 focus:outline-none focus:border-sage focus:bg-white transition" />
-          </div>
-        </div>
-
-        <!-- Ürün Görsel URL & Canlı Önizleme -->
         <div>
-          <label class="block text-xs font-semibold text-ink mb-1.5">Ürün Görsel Linki <span class="font-normal text-mutedInk">(Otomatik önbelleğe alınır)</span></label>
-          <div class="flex items-center gap-3">
-            <input type="url" id="itemImageUrl" oninput="updateImagePreview(this.value)" placeholder="Görsele sağ tıkla -> Resim adresini kopyala" class="flex-1 bg-cream border border-sandBorder rounded-xl px-3.5 py-2.5 text-sm text-ink placeholder-mutedInk/70 focus:outline-none focus:border-sage focus:bg-white transition" />
-            <div class="w-14 h-14 rounded-xl bg-warmGray border border-sandBorder overflow-hidden shrink-0 flex items-center justify-center">
-              <img id="modalImgPreview" src="" alt="Önizleme" class="w-full h-full object-cover hidden" onerror="this.classList.add('hidden'); document.getElementById('modalImgPlaceholder').classList.remove('hidden');" />
-              <svg id="modalImgPlaceholder" class="w-5 h-5 text-mutedInk/60" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            </div>
+          <label class="block text-xs font-semibold text-ink mb-1">Öncelik Etiketi</label>
+          <select id="fTag" onchange="updateRangeLabels()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5DFD5] text-sm focus:outline-none focus:border-sage">
+            <option value="Acil Alınacak">🔥 Acil Alınacak</option>
+            <option value="Yakın Zamanda" selected>⏳ Yakın Zamanda</option>
+            <option value="Sonra Alınır">🌿 Sonra Alınır</option>
+            <option value="Keyfi / Olsa da Olur">✨ Keyfi / Olsa da Olur</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Ürün Linki</label>
+            <input id="fLink" type="url" placeholder="https://..." class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5DFD5] text-sm focus:outline-none focus:border-sage" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Görsel Linki</label>
+            <input id="fImage" type="url" placeholder="https://..." class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5DFD5] text-sm focus:outline-none focus:border-sage" />
           </div>
         </div>
 
-        <!-- Karar Puanları (1 - 10) -->
-        <div class="bg-cream border border-sandBorder rounded-2xl p-4 space-y-4">
+        <!-- Karar Matrisi Puanları -->
+        <div class="bg-white p-4 rounded-2xl border border-[#E5DFD5] space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-ink">Karar Değerlendirmesi (1 – 10)</span>
-            <span class="px-3 py-1 rounded-full bg-sageLight text-sage text-xs font-bold">
-              Öncelik Skoru: <span id="livePreviewScore">0</span> / 100
-            </span>
+            <span class="text-xs font-semibold text-ink">Karar Matrisi Puanlaması</span>
+            <span id="liveScorePreview" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sage/15 text-sage">Önem Skoru: 0</span>
           </div>
 
-          <!-- İhtiyaç -->
           <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <label for="itemNeed" class="text-ink font-medium">Ne Kadar İhtiyacım Var? <span class="text-mutedInk">(Hayatımı kolaylaştırır mı?)</span></label>
-              <span id="valNeed" class="font-bold text-sage">7 / 10</span>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-muted">Gerçek İhtiyaç Derecesi</span>
+              <span id="valNeed" class="font-bold text-ink">5 / 10</span>
             </div>
-            <input type="range" id="itemNeed" min="1" max="10" value="7" oninput="syncSliderLabels()" />
+            <input id="fNeed" type="range" min="1" max="10" value="5" oninput="updateRangeLabels()" class="w-full" />
           </div>
 
-          <!-- Heves -->
           <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <label for="itemDesire" class="text-ink font-medium">Ne Kadar İstiyorum? <span class="text-mutedInk">(Beni ne kadar mutlu eder?)</span></label>
-              <span id="valDesire" class="font-bold text-sage">8 / 10</span>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-muted">Heves / İsteme Seviyesi</span>
+              <span id="valWant" class="font-bold text-ink">5 / 10</span>
             </div>
-            <input type="range" id="itemDesire" min="1" max="10" value="8" oninput="syncSliderLabels()" />
+            <input id="fWant" type="range" min="1" max="10" value="5" oninput="updateRangeLabels()" class="w-full" />
           </div>
 
-          <!-- Aciliyet -->
           <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <label for="itemUrgency" class="text-ink font-medium">Aciliyeti Ne Kadar? <span class="text-mutedInk">(Yakın zamanda alınmalı mı?)</span></label>
-              <span id="valUrgency" class="font-bold text-terracotta">6 / 10</span>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-muted">Zamanlama / Aciliyet</span>
+              <span id="valUrgency" class="font-bold text-ink">3 / 5</span>
             </div>
-            <input type="range" id="itemUrgency" min="1" max="10" value="6" oninput="syncSliderLabels()" />
+            <input id="fUrgency" type="range" min="1" max="5" value="3" oninput="updateRangeLabels()" class="w-full" />
           </div>
         </div>
 
-        <!-- Kişisel Not -->
-        <div>
-          <label class="block text-xs font-semibold text-ink mb-1.5">Kısa Not <span class="font-normal text-mutedInk">(Opsiyonel)</span></label>
-          <input type="text" id="itemNote" placeholder="Örn: Uzun zamandır istiyordum, indirim yakalarsam alacağım." class="w-full bg-cream border border-sandBorder rounded-xl px-3.5 py-2.5 text-sm text-ink placeholder-mutedInk/70 focus:outline-none focus:border-sage focus:bg-white transition" />
-        </div>
-
-        <!-- Form Butonları -->
-        <div class="pt-2 flex items-center justify-end gap-2.5">
-          <button type="button" onclick="closeModal('itemModal')" class="px-4 py-2.5 rounded-xl bg-warmGray text-ink text-xs font-semibold hover:bg-sandBorder/70 transition">Vazgeç</button>
-          <button type="submit" class="px-6 py-2.5 rounded-xl bg-sage hover:bg-[#25594b] text-white text-xs font-bold transition shadow-sm">Listeye Kaydet</button>
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="closeAddModal()" class="flex-1 py-3 rounded-xl bg-sand text-ink text-sm font-semibold hover:opacity-90 transition">Vazgeç</button>
+          <button type="submit" class="flex-1 py-3 rounded-xl bg-sage hover:bg-sageDark text-white text-sm font-semibold transition shadow-sm">Kaydet</button>
         </div>
       </form>
     </div>
   </div>
 
-
-  <!-- ===================================================================== -->
-  <!-- MODAL 2: SKOR FORMÜLÜ ÖZELLEŞTİRME                                    -->
-  <!-- ===================================================================== -->
-  <div id="formulaModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-ink/40 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-cardWhite border border-sandBorder rounded-3xl w-full max-w-xl my-auto overflow-hidden shadow-2xl">
-      <div class="px-6 py-4 border-b border-sandBorder flex items-center justify-between bg-cream/60">
-        <div>
-          <h2 class="font-display font-bold text-base sm:text-lg text-ink">Öncelik Skoru Formülü</h2>
-          <p class="text-xs text-mutedInk">Sıralamayı belirleyen ağırlıkları kendi mantığına göre ayarla.</p>
-        </div>
-        <button onclick="closeModal('formulaModal')" class="p-2 rounded-xl text-mutedInk hover:text-ink hover:bg-warmGray">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
+  <!-- Yedekleme Modalı -->
+  <div id="backupModal" class="fixed inset-0 z-50 hidden bg-ink/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-cream w-full max-w-sm rounded-3xl border border-[#E5DFD5] shadow-2xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-serif text-xl font-semibold text-ink">Yedek & Eşitleme</h2>
+        <button onclick="closeBackupModal()" class="w-8 h-8 rounded-full bg-sand flex items-center justify-center text-muted hover:text-ink">✕</button>
       </div>
 
-      <div class="p-6 space-y-4 max-h-[82vh] overflow-y-auto">
-        <!-- Mod Seçimi -->
-        <div class="flex items-center gap-1.5 bg-warmGray p-1 rounded-xl">
-          <button type="button" id="fModeWeightsBtn" onclick="setFormulaMode('weights')" class="flex-1 py-2 rounded-lg text-xs font-bold bg-white text-ink shadow-xs transition">Katsayı Çubukları</button>
-          <button type="button" id="fModeCustomBtn" onclick="setFormulaMode('custom')" class="flex-1 py-2 rounded-lg text-xs font-medium text-mutedInk hover:text-ink transition">Serbest Formül Yaz</button>
-        </div>
-
-        <!-- MOD A: KATSAYI ÇUBUKLARI -->
-        <div id="weightsFormulaSection" class="space-y-4">
-          <div class="bg-cream border border-sandBorder rounded-xl p-3 text-xs text-ink leading-relaxed">
-            <strong>Aktif Formül:</strong> (İhtiyaç × <span id="fTextNeed" class="text-sage font-bold">3.5</span>) + (Heves × <span id="fTextDesire" class="text-sage font-bold">2.5</span>) + (Aciliyet × <span id="fTextUrgency" class="text-sage font-bold">2.5</span>) + Etiket Bonusu (<span id="fTextTag" class="text-terracotta font-bold">+15</span>) − Fiyat Etkisi (<span id="fTextPrice" class="text-mutedInk font-bold">0</span>)
-          </div>
-
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-ink">İhtiyaç Derecesi Katsayısı</span>
-              <span id="wNeedLabel" class="font-bold text-sage">3.5x</span>
-            </div>
-            <input type="range" id="wNeed" min="0" max="10" step="0.5" value="3.5" oninput="updateFormulaFromSliders()" />
-          </div>
-
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-ink">Heves / İstek Katsayısı</span>
-              <span id="wDesireLabel" class="font-bold text-sage">2.5x</span>
-            </div>
-            <input type="range" id="wDesire" min="0" max="10" step="0.5" value="2.5" oninput="updateFormulaFromSliders()" />
-          </div>
-
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-ink">Aciliyet Katsayısı</span>
-              <span id="wUrgencyLabel" class="font-bold text-sage">2.5x</span>
-            </div>
-            <input type="range" id="wUrgency" min="0" max="10" step="0.5" value="2.5" oninput="updateFormulaFromSliders()" />
-          </div>
-
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-ink">Öncelik Etiketi Bonusu <span class="text-mutedInk">("Acil Alınacak" vb. katkısı)</span></span>
-              <span id="wTagLabel" class="font-bold text-terracotta">+15 puan</span>
-            </div>
-            <input type="range" id="wTag" min="0" max="30" step="1" value="15" oninput="updateFormulaFromSliders()" />
-          </div>
-
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-ink">Fiyat Freni <span class="text-mutedInk">(0 = Fiyat sıralamayı hiç etkilemez)</span></span>
-              <span id="wPriceLabel" class="font-bold text-mutedInk">Kapalı (0)</span>
-            </div>
-            <input type="range" id="wPrice" min="0" max="10" step="1" value="0" oninput="updateFormulaFromSliders()" />
-          </div>
-        </div>
-
-        <!-- MOD B: SERBEST FORMÜL -->
-        <div id="customFormulaSection" class="hidden space-y-3">
-          <p class="text-xs text-mutedInk leading-relaxed">
-            Kullanabileceğin değişkenler: <code class="bg-warmGray px-1.5 py-0.5 rounded text-sage font-semibold">ihtiyac</code> (1-10), <code class="bg-warmGray px-1.5 py-0.5 rounded text-sage font-semibold">heves</code> (1-10), <code class="bg-warmGray px-1.5 py-0.5 rounded text-sage font-semibold">aciliyet</code> (1-10), <code class="bg-warmGray px-1.5 py-0.5 rounded text-terracotta font-semibold">etiketBonus</code> (0-15), <code class="bg-warmGray px-1.5 py-0.5 rounded text-ink font-semibold">fiyat</code> (₺).
-          </p>
-          <input type="text" id="customExpressionInput" oninput="saveCustomExpression()" placeholder="(ihtiyac * 3.5) + (heves * 2.5) + (aciliyet * 2.5) + etiketBonus" class="w-full bg-cream border border-sandBorder rounded-xl px-3.5 py-2.5 font-mono text-xs text-ink focus:outline-none focus:border-sage focus:bg-white" />
-          <div id="customFormulaStatus" class="text-xs font-medium text-sage">Formül geçerli.</div>
-        </div>
-
-        <div class="pt-3 border-t border-sandBorder flex items-center justify-between">
-          <button type="button" onclick="resetFormulaDefaults()" class="text-xs font-medium text-mutedInk hover:text-ink underline">Varsayılana Dön</button>
-          <button type="button" onclick="closeModal('formulaModal')" class="px-5 py-2.5 rounded-xl bg-sage text-white text-xs font-bold hover:bg-[#25594b] transition">Tamam</button>
-        </div>
+      <div class="space-y-2.5">
+        <button onclick="syncFromCloud(); closeBackupModal();" class="w-full py-2.5 px-3 rounded-xl bg-sage text-white text-xs font-semibold hover:bg-sageDark transition">🔄 Buluttan Şimdi Çek</button>
+        <button onclick="pushAllToCloud()" class="w-full py-2.5 px-3 rounded-xl bg-white border border-[#E5DFD5] text-xs font-semibold text-ink hover:bg-sand transition">☁️ Yerel Verileri Buluta Gönder</button>
+        <button onclick="exportJson()" class="w-full py-2.5 px-3 rounded-xl bg-white border border-[#E5DFD5] text-xs font-semibold text-ink hover:bg-sand transition">⬇️ JSON Yedek İndir</button>
+        <label class="block w-full py-2.5 px-3 rounded-xl bg-white border border-[#E5DFD5] text-xs font-semibold text-ink hover:bg-sand transition text-center cursor-pointer">
+          ⬆️ JSON Yedek Yükle
+          <input type="file" accept=".json" onchange="importJson(event)" class="hidden" />
+        </label>
       </div>
     </div>
   </div>
 
-
-  <!-- ===================================================================== -->
-  <!-- MODAL 3: ÖNCELİK ETİKETLERİ YÖNETİMİ                                  -->
-  <!-- ===================================================================== -->
-  <div id="tagsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-ink/40 backdrop-blur-xs p-4">
-    <div class="bg-cardWhite border border-sandBorder rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
-      <div class="px-6 py-4 border-b border-sandBorder flex items-center justify-between bg-cream/60">
-        <div>
-          <h2 class="font-display font-bold text-base text-ink">Öncelik Etiketleri</h2>
-          <p class="text-xs text-mutedInk">Kendi özel karar etiketlerini ekleyebilirsin.</p>
-        </div>
-        <button onclick="closeModal('tagsModal')" class="p-2 rounded-xl text-mutedInk hover:text-ink hover:bg-warmGray">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-
-      <div class="p-6 space-y-4">
-        <form onsubmit="addNewTag(event)" class="space-y-3 bg-cream border border-sandBorder rounded-2xl p-4">
-          <div class="text-xs font-bold text-ink">Yeni Özel Etiket Ekle</div>
-          <div class="flex items-center gap-2">
-            <input type="text" id="newTagName" required placeholder="Örn: İndirim Bekle / Taksitle Al" class="flex-1 bg-white border border-sandBorder rounded-xl px-3 py-2 text-xs text-ink placeholder-mutedInk/70 focus:outline-none focus:border-sage" />
-            <select id="newTagColor" class="bg-white border border-sandBorder rounded-xl px-2.5 py-2 text-xs text-ink focus:outline-none focus:border-sage">
-              <option value="terracotta">Kiremit (Acil)</option>
-              <option value="amber">Kehribar (Yakın)</option>
-              <option value="sky">Mavi (Normal)</option>
-              <option value="purple">Lavanta (Keyfi)</option>
-              <option value="sage">Adaçayı (Fırsat)</option>
-            </select>
-          </div>
-          <div class="flex items-center justify-between gap-2 pt-1">
-            <div class="flex items-center gap-2 text-xs text-mutedInk">
-              <span>Öncelik Ağırlığı (1-10):</span>
-              <input type="number" id="newTagWeight" min="1" max="10" value="6" class="w-14 bg-white border border-sandBorder rounded-lg px-2 py-1 text-xs font-semibold text-ink" />
-            </div>
-            <button type="submit" class="px-4 py-2 rounded-xl bg-sage text-white text-xs font-bold hover:bg-[#25594b] transition">+ Ekle</button>
-          </div>
-        </form>
-
-        <div id="tagsListContainer" class="space-y-2 max-h-56 overflow-y-auto">
-          <!-- Dinamik -->
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ===================================================================== -->
-  <!-- MODAL 4: JSON YEDEKLEME VE GERİ YÜKLEME                               -->
-  <!-- ===================================================================== -->
-  <div id="backupModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-ink/40 backdrop-blur-xs p-4">
-    <div class="bg-cardWhite border border-sandBorder rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl">
-      <div class="px-6 py-4 border-b border-sandBorder flex items-center justify-between bg-cream/60">
-        <h2 class="font-display font-bold text-base text-ink">Veri Yedekleme (JSON)</h2>
-        <button onclick="closeModal('backupModal')" class="p-2 rounded-xl text-mutedInk hover:text-ink hover:bg-warmGray">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="p-6 space-y-4 text-xs">
-        <p class="text-mutedInk leading-relaxed">
-          Eklediğin tüm ürünler, görsel linkleri, puanlar ve özel etiketlerin tarayıcı hafızasında ve önbellekte otomatik saklanır. Dilediğin zaman listeni <strong class="text-ink">.json</strong> dosyası olarak indirip yedekleyebilir veya başka bir cihazdan geri yükleyebilirsin.
-        </p>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button onclick="exportBackupJSON()" class="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-sage text-white font-bold hover:bg-[#25594b] transition shadow-xs">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            <span>JSON Olarak İndir</span>
-          </button>
-
-          <label class="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-cream border border-sandBorder hover:border-sage text-ink font-semibold cursor-pointer transition">
-            <svg class="w-4 h-4 text-sage" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            <span>JSON Dosyası Yükle</span>
-            <input type="file" accept=".json" onchange="importBackupJSON(event)" class="hidden" />
-          </label>
-        </div>
-
-        <div class="pt-3 border-t border-sandBorder flex justify-end">
-          <button onclick="clearAllItems()" class="text-rose-600 hover:underline font-medium">Tüm Listeyi Sıfırla</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================================== -->
-  <!-- JAVASCRIPT UYGULAMA MOTORU (Author: Enes Furkan Gözüdik)              -->
-  <!-- ===================================================================== -->
   <script>
-    const STORAGE_KEY = 'istek_panom_data_v1';
-    const IMAGE_CACHE_NAME = 'istek-panom-images-v1';
-
-    const DEFAULT_TAGS = [
-      { id: 'urgent', name: 'Acil Alınacak', color: 'terracotta', priorityWeight: 10 },
-      { id: 'soon', name: 'Yakın Zamanda', color: 'amber', priorityWeight: 7 },
-      { id: 'later', name: 'Sonra Alınır', color: 'sky', priorityWeight: 4 },
-      { id: 'casual', name: 'Olsa da Olur', color: 'purple', priorityWeight: 1 }
-    ];
-
-    const TAG_COLOR_STYLES = {
-      terracotta: 'bg-terracottaLight text-terracotta border-terracotta/25',
-      amber: 'bg-amber-50 text-amber-700 border-amber-200',
-      sky: 'bg-sky-50 text-sky-700 border-sky-200',
-      purple: 'bg-purple-50 text-purple-700 border-purple-200',
-      sage: 'bg-sageLight text-sage border-sage/25'
+    // =========================================================
+    // BURAYA KENDİ VERCEL ADRESİNİ VE SYNC_PIN ŞİFRENİ YAZ:
+    // =========================================================
+    const DEFAULT_CONFIG = {
+      apiUrl: "https://whishlist-seven.vercel.app/", // <-- Kendi Vercel URL'ni buraya yaz (sonunda / olmasın)
+      pin: "1453"                                    // <-- Vercel'de belirlediğin SYNC_PIN değerini buraya yaz
     };
 
-    const DEFAULT_FORMULA = {
-      mode: 'weights',
-      wNeed: 3.5,
-      wDesire: 2.5,
-      wUrgency: 2.5,
-      wTag: 15,
-      wPrice: 0,
-      customExpression: '(ihtiyac * 3.5) + (heves * 2.5) + (aciliyet * 2.5) + etiketBonus'
+    const STORAGE_KEY = 'istek_panosu_items_v1';
+    let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let currentFilter = 'ALL';
+    let searchDebounce = null;
+
+    const TAG_WEIGHTS = {
+      'Acil Alınacak': 15,
+      'Yakın Zamanda': 8,
+      'Sonra Alınır': 2,
+      'Keyfi / Olsa da Olur': 0
     };
 
-    let appState = {
-      tags: JSON.parse(JSON.stringify(DEFAULT_TAGS)),
-      formula: { ...DEFAULT_FORMULA },
-      items: [] // Tamamen boş başlar (0 örnek ürün)
+    const TAG_STYLES = {
+      'Acil Alınacak': 'bg-terracotta/15 text-terracotta border-terracotta/30',
+      'Yakın Zamanda': 'bg-amber-500/15 text-amber-800 border-amber-500/30',
+      'Sonra Alınır': 'bg-sage/15 text-sageDark border-sage/30',
+      'Keyfi / Olsa da Olur': 'bg-stone-200/70 text-stone-700 border-stone-300'
     };
 
-    let activeFilter = 'ALL';
-    let deferredInstallPrompt = null;
-    let currentDeployTab = 'index';
-
-    // -------------------------------------------------------------------------
-    // 1. BAŞLATMA VE YEREL DEPOLAMA
-    // -------------------------------------------------------------------------
-    function initApp() {
-      loadState();
-      setupDynamicPWA();
-      syncFormulaModalUI();
-      populateTagSelects();
-      renderAll();
-      cacheAllItemImages();
+    function calculateScore(item) {
+      const need = Number(item.need) || 5;
+      const want = Number(item.want) || 5;
+      const urgency = Number(item.urgency) || 3;
+      const tagBonus = TAG_WEIGHTS[item.tag] || 0;
+      return Math.round((need * 3) + (want * 2) + (urgency * 4) + tagBonus);
     }
 
-    function loadState() {
+    function setSyncStatus(state, text) {
+      const dot = document.getElementById('syncDot');
+      const label = document.getElementById('syncText');
+      label.textContent = text;
+      dot.className = 'w-2 h-2 rounded-full ' + (
+        state === 'ok' ? 'bg-emerald-500' :
+        state === 'syncing' ? 'bg-amber-400 animate-pulse' :
+        state === 'error' ? 'bg-rose-500' : 'bg-stone-400'
+      );
+    }
+
+    async function syncFromCloud() {
+      const apiUrl = DEFAULT_CONFIG.apiUrl.replace(/\/+$/, '');
+      if (!apiUrl || apiUrl.includes('wishlist-api-xxx')) {
+        setSyncStatus('local', 'API URL Girilmedi');
+        return;
+      }
+      setSyncStatus('syncing', 'Eşitleniyor...');
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          appState = {
-            tags: Array.isArray(parsed.tags) && parsed.tags.length > 0 ? parsed.tags : JSON.parse(JSON.stringify(DEFAULT_TAGS)),
-            formula: { ...DEFAULT_FORMULA, ...(parsed.formula || {}) },
-            items: Array.isArray(parsed.items) ? parsed.items : []
-          };
-        }
-      } catch (e) {
-        appState.items = [];
-      }
-    }
-
-    function saveState() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      } catch (e) {
-        showToast('Depolama uyarısı: JSON yedeği indirmeniz önerilir.', 'error');
-      }
-    }
-
-    function clearAllItems() {
-      appState.items = [];
-      saveState();
-      closeModal('backupModal');
-      renderAll();
-      showToast('Liste sıfırlandı.');
-    }
-
-    // -------------------------------------------------------------------------
-    // 2. ÖNCELİK SKORU HESAPLAMA MOTORU (1 - 100)
-    // -------------------------------------------------------------------------
-    function getTagById(tagId) {
-      return appState.tags.find(t => t.id === tagId) || appState.tags[0] || { id: 'default', name: 'Genel', color: 'sky', priorityWeight: 5 };
-    }
-
-    function calculateDecisionScore(item) {
-      const f = appState.formula;
-      const tag = getTagById(item.tagId);
-      const ihtiyac = Number(item.need) || 1;
-      const heves = Number(item.desire) || 1;
-      const aciliyet = Number(item.urgency) || 1;
-      const fiyat = Number(item.price) || 0;
-      const etiketBonus = ((Number(tag.priorityWeight) || 5) / 10) * (Number(f.wTag) || 0);
-
-      if (f.mode === 'custom' && f.customExpression && f.customExpression.trim() !== '') {
-        try {
-          const fn = new Function('ihtiyac', 'heves', 'aciliyet', 'etiketBonus', 'fiyat', `return (${f.customExpression});`);
-          const val = Number(fn(ihtiyac, heves, aciliyet, etiketBonus, fiyat));
-          if (!isNaN(val) && isFinite(val)) {
-            return Math.round(Math.max(1, Math.min(100, val)));
-          }
-        } catch (err) {}
-      }
-
-      const wNeed = Number(f.wNeed);
-      const wDesire = Number(f.wDesire);
-      const wUrgency = Number(f.wUrgency);
-      const wTag = Number(f.wTag);
-      const wPrice = Number(f.wPrice);
-
-      const rawScore = (ihtiyac * wNeed) + (heves * wDesire) + (aciliyet * wUrgency) + etiketBonus;
-      const maxPossible = (10 * (wNeed + wDesire + wUrgency)) + wTag || 1;
-
-      let normalized = (rawScore / maxPossible) * 100;
-
-      if (wPrice > 0 && fiyat > 0) {
-        const pricePenalty = Math.min(20, (fiyat / 25000) * wPrice);
-        normalized -= pricePenalty;
-      }
-
-      return Math.round(Math.max(1, Math.min(100, normalized)));
-    }
-
-    // -------------------------------------------------------------------------
-    // 3. ARAYÜZ RENDER İŞLEMLERİ
-    // -------------------------------------------------------------------------
-    function formatCurrency(num) {
-      return new Intl.NumberFormat('tr-TR', {
-        style: 'decimal',
-        maximumFractionDigits: 0
-      }).format(Math.round(num)) + ' ₺';
-    }
-
-    function renderAll() {
-      updateTopStats();
-      renderFilterPills();
-      renderGrid();
-    }
-
-    function updateTopStats() {
-      const activeItems = appState.items.filter(i => !i.purchased);
-      const purchasedItems = appState.items.filter(i => i.purchased);
-      const urgentItems = activeItems.filter(i => i.tagId === 'urgent');
-      const totalValue = activeItems.reduce((sum, i) => sum + (Number(i.price) || 0), 0);
-
-      document.getElementById('statActiveCount').textContent = activeItems.length;
-      document.getElementById('statUrgentCount').textContent = urgentItems.length;
-      document.getElementById('statTotalValue').textContent = formatCurrency(totalValue);
-      document.getElementById('statPurchasedCount').textContent = purchasedItems.length;
-    }
-
-    function renderFilterPills() {
-      const container = document.getElementById('filterPillsContainer');
-      const activeItems = appState.items.filter(i => !i.purchased);
-      const purchasedItems = appState.items.filter(i => i.purchased);
-
-      const pills = [
-        { id: 'ALL', label: `Tümü (${activeItems.length})` },
-        ...appState.tags.map(tag => ({
-          id: tag.id,
-          label: `${tag.name} (${activeItems.filter(i => i.tagId === tag.id).length})`
-        })),
-        { id: 'PURCHASED', label: `Alındı (${purchasedItems.length})` }
-      ];
-
-      container.innerHTML = pills.map(p => {
-        const isActive = activeFilter === p.id;
-        const cls = isActive
-          ? 'bg-sage text-white font-semibold shadow-xs'
-          : 'bg-cream text-mutedInk hover:text-ink border border-sandBorder font-medium';
-        return `<button onclick="setFilter('${p.id}')" class="px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap transition ${cls}">${escapeHtml(p.label)}</button>`;
-      }).join('');
-    }
-
-    function setFilter(filterId) {
-      activeFilter = filterId;
-      renderFilterPills();
-      renderGrid();
-    }
-
-    function renderGrid() {
-      const grid = document.getElementById('itemsGrid');
-      const emptyState = document.getElementById('emptyState');
-      const query = document.getElementById('searchInput').value.trim().toLowerCase();
-      const categoryFilter = document.getElementById('categoryFilterSelect').value;
-      const sortMode = document.getElementById('sortSelect').value;
-
-      let list = appState.items.filter(item => {
-        if (activeFilter === 'PURCHASED') return Boolean(item.purchased);
-        if (item.purchased) return false;
-        if (activeFilter !== 'ALL' && item.tagId !== activeFilter) return false;
-        if (categoryFilter !== 'ALL' && (item.category || 'Diğer') !== categoryFilter) return false;
-        return true;
-      });
-
-      if (query) {
-        list = list.filter(item =>
-          item.title.toLowerCase().includes(query) ||
-          (item.note && item.note.toLowerCase().includes(query))
-        );
-      }
-
-      const scoredList = list.map(item => ({
-        ...item,
-        score: calculateDecisionScore(item)
-      }));
-
-      scoredList.sort((a, b) => {
-        if (sortMode === 'score_desc') return b.score - a.score;
-        if (sortMode === 'score_asc') return a.score - b.score;
-        if (sortMode === 'price_desc') return b.price - a.price;
-        if (sortMode === 'price_asc') return a.price - b.price;
-        if (sortMode === 'newest') return (b.createdAt || 0) - (a.createdAt || 0);
-        return b.score - a.score;
-      });
-
-      if (scoredList.length === 0) {
-        grid.innerHTML = '';
-        emptyState.classList.remove('hidden');
-
-        if (appState.items.length === 0) {
-          document.getElementById('emptyStateTitle').textContent = 'İstek Panon Şu An Tertemiz';
-          document.getElementById('emptyStateDesc').textContent = 'Uzun zamandır kendine almak istediğin şeyleri buraya ekle; ihtiyaç, heves ve aciliyet puanlarını ver, senin için en doğru öncelik sırasını birlikte oluşturalım.';
+        const res = await fetch(`${apiUrl}/api/product?action=list`, {
+          headers: DEFAULT_CONFIG.pin ? { 'x-sync-pin': DEFAULT_CONFIG.pin } : {}
+        });
+        const data = await res.json();
+        if (data.ok && Array.isArray(data.items)) {
+          items = data.items;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+          renderItems();
+          setSyncStatus('ok', 'Supabase Bağlı');
         } else {
-          document.getElementById('emptyStateTitle').textContent = 'Bu Filtrede Ürün Bulunamadı';
-          document.getElementById('emptyStateDesc').textContent = 'Farklı bir etiket veya kategori seçebilir ya da bu alana yeni bir ürün ekleyebilirsin.';
+          setSyncStatus('error', data.error || 'Bağlantı Hatası');
         }
+      } catch (e) {
+        setSyncStatus('error', 'Çevrimdışı (Önbellek)');
+      }
+    }
+
+    async function syncItemToCloud(item) {
+      const apiUrl = DEFAULT_CONFIG.apiUrl.replace(/\/+$/, '');
+      if (!apiUrl || apiUrl.includes('wishlist-api-xxx')) return;
+      setSyncStatus('syncing', 'Kaydediliyor...');
+      try {
+        const res = await fetch(`${apiUrl}/api/product`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(DEFAULT_CONFIG.pin ? { 'x-sync-pin': DEFAULT_CONFIG.pin } : {})
+          },
+          body: JSON.stringify(item)
+        });
+        const data = await res.json();
+        setSyncStatus(data.ok ? 'ok' : 'error', data.ok ? 'Supabase Bağlı' : 'Kayıt Hatası');
+      } catch (e) {
+        setSyncStatus('error', 'Çevrimdışı Kaydedildi');
+      }
+    }
+
+    async function deleteItemFromCloud(id) {
+      const apiUrl = DEFAULT_CONFIG.apiUrl.replace(/\/+$/, '');
+      if (!apiUrl || apiUrl.includes('wishlist-api-xxx')) return;
+      try {
+        await fetch(`${apiUrl}/api/product?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: DEFAULT_CONFIG.pin ? { 'x-sync-pin': DEFAULT_CONFIG.pin } : {}
+        });
+      } catch (_) {}
+    }
+
+    async function pushAllToCloud() {
+      if (!items.length) return alert('Gönderilecek yerel ürün yok.');
+      await syncItemToCloud(items);
+      closeBackupModal();
+      alert('Tüm yerel veriler Supabase veritabanına aktarıldı!');
+    }
+
+    function handleSmartInput(val) {
+      clearTimeout(searchDebounce);
+      const dropdown = document.getElementById('searchDropdown');
+      const status = document.getElementById('smartStatus');
+      const trimmed = val.trim();
+
+      if (!trimmed) {
+        dropdown.classList.add('hidden');
+        status.classList.add('hidden');
         return;
       }
 
-      emptyState.classList.add('hidden');
-
-      grid.innerHTML = scoredList.map((item, idx) => {
-        const tag = getTagById(item.tagId);
-        const tagBadgeClass = TAG_COLOR_STYLES[tag.color] || TAG_COLOR_STYLES.sky;
-        const isPurchased = Boolean(item.purchased);
-
-        const fallbackSvg = `data:image/svg+xml;utf8,${encodeURIComponent(
-          `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240"><rect width="400" height="240" fill="#F2EFE9"/><circle cx="200" cy="105" r="24" fill="#E6E1D8"/><text x="50%" y="65%" dominant-baseline="middle" text-anchor="middle" fill="#646E68" font-family="sans-serif" font-size="13" font-weight="500">${escapeHtml(item.category || 'İstek Ürünü')}</text></svg>`
-        )}`;
-
-        const imgSrc = item.imageUrl && item.imageUrl.trim() !== '' ? item.imageUrl : fallbackSvg;
-
-        const scoreBadgeClass = item.score >= 80
-          ? 'bg-sage text-white'
-          : item.score >= 60
-            ? 'bg-sageLight text-sage'
-            : 'bg-warmGray text-ink';
-
-        const tagOptionsHtml = appState.tags.map(t =>
-          `<option value="${t.id}" ${t.id === item.tagId ? 'selected' : ''}>${escapeHtml(t.name)}</option>`
-        ).join('');
-
-        return `
-          <article class="bg-cardWhite border border-sandBorder rounded-2xl overflow-hidden shadow-card hover:shadow-soft flex flex-col justify-between transition group ${isPurchased ? 'opacity-75' : ''}">
-            
-            <!-- Görsel ve Üst Rozetler -->
-            <div>
-              <div class="relative h-48 bg-warmGray border-b border-sandBorder/70 overflow-hidden">
-                <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.onerror=null; this.src='${fallbackSvg}';" class="w-full h-full object-cover group-hover:scale-[1.02] transition duration-500" />
-                
-                <!-- Sıra & Skor Rozeti -->
-                <div class="absolute top-3 left-3 flex items-center gap-1.5">
-                  ${!isPurchased ? `
-                    <span class="px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur-xs shadow-xs text-xs font-bold text-ink">
-                      #${idx + 1}
-                    </span>
-                  ` : ''}
-                  <span class="px-2.5 py-1 rounded-lg shadow-xs text-xs font-bold ${scoreBadgeClass}">
-                    Skor: ${item.score}
-                  </span>
-                </div>
-
-                <!-- Durum Etiketi -->
-                <div class="absolute top-3 right-3">
-                  <span class="px-2.5 py-1 rounded-lg backdrop-blur-xs border text-[11px] font-semibold shadow-xs ${isPurchased ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : tagBadgeClass}">
-                    ${isPurchased ? 'Alındı ✓' : escapeHtml(tag.name)}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Kart Gövdesi -->
-              <div class="p-4 sm:p-5 space-y-3.5">
-                <div>
-                  <div class="flex items-center justify-between gap-2 mb-1">
-                    <span class="text-[11px] font-medium text-mutedInk">${escapeHtml(item.category || 'Diğer')}</span>
-                  </div>
-                  <h3 class="font-display font-bold text-base text-ink leading-snug line-clamp-2">${escapeHtml(item.title)}</h3>
-                  <div class="font-display font-bold text-lg text-sage mt-1.5">${formatCurrency(item.price)}</div>
-                  ${item.note ? `<p class="text-xs text-mutedInk mt-1.5 line-clamp-2 leading-relaxed">${escapeHtml(item.note)}</p>` : ''}
-                </div>
-
-                <!-- 3 Metrik İlerleme Çubuğu -->
-                <div class="space-y-2 pt-3 border-t border-sandBorder/70 text-xs">
-                  <div class="flex items-center gap-2.5">
-                    <span class="w-14 text-mutedInk font-medium">İhtiyaç</span>
-                    <div class="flex-1 h-1.5 bg-warmGray rounded-full overflow-hidden">
-                      <div class="h-full bg-sage rounded-full" style="width: ${item.need * 10}%"></div>
-                    </div>
-                    <span class="w-7 text-right font-semibold text-ink">${item.need}/10</span>
-                  </div>
-                  <div class="flex items-center gap-2.5">
-                    <span class="w-14 text-mutedInk font-medium">Heves</span>
-                    <div class="flex-1 h-1.5 bg-warmGray rounded-full overflow-hidden">
-                      <div class="h-full bg-amber-500 rounded-full" style="width: ${item.desire * 10}%"></div>
-                    </div>
-                    <span class="w-7 text-right font-semibold text-ink">${item.desire}/10</span>
-                  </div>
-                  <div class="flex items-center gap-2.5">
-                    <span class="w-14 text-mutedInk font-medium">Aciliyet</span>
-                    <div class="flex-1 h-1.5 bg-warmGray rounded-full overflow-hidden">
-                      <div class="h-full bg-terracotta rounded-full" style="width: ${item.urgency * 10}%"></div>
-                    </div>
-                    <span class="w-7 text-right font-semibold text-ink">${item.urgency}/10</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Kart Alt Aksiyonlar -->
-            <div class="px-4 sm:px-5 py-3.5 bg-cream/60 border-t border-sandBorder/70 space-y-2.5">
-              ${!isPurchased ? `
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-[11px] text-mutedInk font-medium">Öncelik Durumu:</span>
-                  <select onchange="quickChangeItemTag('${item.id}', this.value)" class="bg-white border border-sandBorder rounded-lg px-2.5 py-1 text-xs font-medium text-ink focus:outline-none focus:border-sage">
-                    ${tagOptionsHtml}
-                  </select>
-                </div>
-              ` : ''}
-
-              <div class="flex items-center justify-between gap-1.5">
-                <!-- Alındı İşaretle -->
-                <button onclick="togglePurchased('${item.id}')" class="flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 ${isPurchased ? 'bg-white border border-sandBorder text-ink hover:bg-warmGray' : 'bg-sageLight text-sage hover:bg-sage hover:text-white'}">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                  <span>${isPurchased ? 'Listeye Geri Al' : 'Aldım!'}</span>
-                </button>
-
-                <!-- Ürün Linki -->
-                ${item.url ? `
-                  <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" title="Ürün Sayfasını Aç" class="p-2 rounded-xl bg-white border border-sandBorder text-ink hover:text-sage hover:border-sage transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                  </a>
-                ` : ''}
-
-                <!-- Düzenle -->
-                <button onclick="openItemModal('${item.id}')" title="Düzenle" class="p-2 rounded-xl bg-white border border-sandBorder text-mutedInk hover:text-ink transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                </button>
-
-                <!-- Sil -->
-                <button onclick="deleteItem('${item.id}')" title="Sil" class="p-2 rounded-xl bg-white border border-sandBorder text-mutedInk hover:text-rose-600 transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                </button>
-              </div>
-            </div>
-
-          </article>
-        `;
-      }).join('');
-    }
-
-    // -------------------------------------------------------------------------
-    // 4. ÜRÜN EKLEME, DÜZENLEME VE SİLME
-    // -------------------------------------------------------------------------
-    function populateTagSelects() {
-      const itemTagSelect = document.getElementById('itemTag');
-      const currentVal = itemTagSelect.value;
-      itemTagSelect.innerHTML = appState.tags.map(t =>
-        `<option value="${t.id}">${escapeHtml(t.name)}</option>`
-      ).join('');
-      if (currentVal && appState.tags.some(t => t.id === currentVal)) {
-        itemTagSelect.value = currentVal;
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        dropdown.classList.add('hidden');
+        searchDebounce = setTimeout(() => triggerSmartFetch(), 400);
+        return;
       }
-      renderTagsManagerList();
+
+      if (trimmed.length < 2) return;
+      searchDebounce = setTimeout(async () => {
+        const apiUrl = DEFAULT_CONFIG.apiUrl.replace(/\/+$/, '');
+        try {
+          const res = await fetch(`${apiUrl}/api/product?q=${encodeURIComponent(trimmed)}`);
+          const data = await res.json();
+          if (data.ok && data.items && data.items.length) {
+            dropdown.innerHTML = data.items.map(s => `
+              <button type="button" onclick='selectSuggestion(${JSON.stringify(s).replace(/'/g, "&#39;")})' class="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-sand text-left transition">
+                <img src="${s.image}" class="w-10 h-10 rounded-lg object-cover bg-cream border border-[#E5DFD5]" onerror="this.style.display='none'" />
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-semibold text-ink truncate">${s.title}</div>
+                  <div class="text-[11px] text-sage">Seç ve formu doldur</div>
+                </div>
+              </button>
+            `).join('');
+            dropdown.classList.remove('hidden');
+          }
+        } catch (_) {}
+      }, 350);
     }
 
-    function openItemModal(editId = null) {
-      populateTagSelects();
-      const form = document.getElementById('itemForm');
-      form.reset();
-      document.getElementById('itemId').value = '';
-      updateImagePreview('');
+    function selectSuggestion(item) {
+      document.getElementById('fTitle').value = item.title;
+      document.getElementById('fImage').value = item.image;
+      document.getElementById('fLink').value = item.searchUrl;
+      document.getElementById('searchDropdown').classList.add('hidden');
+      document.getElementById('smartInput').value = '';
+    }
 
-      if (editId) {
-        const item = appState.items.find(i => i.id === editId);
-        if (!item) return;
-        document.getElementById('itemModalTitle').textContent = 'Ürünü Düzenle';
-        document.getElementById('itemId').value = item.id;
-        document.getElementById('itemTitle').value = item.title;
-        document.getElementById('itemTag').value = item.tagId;
-        document.getElementById('itemCategory').value = item.category || 'Teknoloji';
-        document.getElementById('itemPrice').value = item.price;
-        document.getElementById('itemUrl').value = item.url || '';
-        document.getElementById('itemImageUrl').value = item.imageUrl || '';
-        document.getElementById('itemDesire').value = item.desire;
-        document.getElementById('itemNeed').value = item.need;
-        document.getElementById('itemUrgency').value = item.urgency;
-        document.getElementById('itemNote').value = item.note || '';
-        updateImagePreview(item.imageUrl || '');
+    async function triggerSmartFetch() {
+      const val = document.getElementById('smartInput').value.trim();
+      const status = document.getElementById('smartStatus');
+      const apiUrl = DEFAULT_CONFIG.apiUrl.replace(/\/+$/, '');
+      if (!val) return;
+
+      if (val.startsWith('http://') || val.startsWith('https://')) {
+        status.textContent = 'Link inceleniyor, ürün bilgileri çekiliyor...';
+        status.classList.remove('hidden');
+        try {
+          const res = await fetch(`${apiUrl}/api/product?url=${encodeURIComponent(val)}`);
+          const data = await res.json();
+          document.getElementById('fLink').value = val;
+          if (data.ok) {
+            if (data.title) document.getElementById('fTitle').value = data.title;
+            if (data.image) document.getElementById('fImage').value = data.image;
+            if (data.price) document.getElementById('fPrice').value = data.price;
+            status.textContent = data.price ? 'Başlık, görsel ve fiyat çekildi!' : 'Başlık ve görsel çekildi (fiyatı kontrol edebilirsin).';
+          } else {
+            status.textContent = data.error || 'Bilgiler otomatik çekilemedi, elle girebilirsin.';
+          }
+        } catch (e) {
+          status.textContent = 'API bağlantı hatası oluştu.';
+        }
       } else {
-        document.getElementById('itemModalTitle').textContent = 'Yeni Ürün Ekle';
-        document.getElementById('itemNeed').value = 7;
-        document.getElementById('itemDesire').value = 8;
-        document.getElementById('itemUrgency').value = 6;
+        handleSmartInput(val);
       }
-
-      syncSliderLabels();
-      openModal('itemModal');
     }
 
-    function syncSliderLabels() {
-      const desire = Number(document.getElementById('itemDesire').value);
-      const need = Number(document.getElementById('itemNeed').value);
-      const urgency = Number(document.getElementById('itemUrgency').value);
-      const price = Number(document.getElementById('itemPrice').value) || 0;
-      const tagId = document.getElementById('itemTag').value;
-
+    function updateRangeLabels() {
+      const need = document.getElementById('fNeed').value;
+      const want = document.getElementById('fWant').value;
+      const urgency = document.getElementById('fUrgency').value;
+      const tag = document.getElementById('fTag').value;
       document.getElementById('valNeed').textContent = `${need} / 10`;
-      document.getElementById('valDesire').textContent = `${desire} / 10`;
-      document.getElementById('valUrgency').textContent = `${urgency} / 10`;
-
-      const score = calculateDecisionScore({ desire, need, urgency, price, tagId });
-      document.getElementById('livePreviewScore').textContent = score;
+      document.getElementById('valWant').textContent = `${want} / 10`;
+      document.getElementById('valUrgency').textContent = `${urgency} / 5`;
+      const score = calculateScore({ need, want, urgency, tag });
+      document.getElementById('liveScorePreview').textContent = `Önem Skoru: ${score}`;
     }
 
-    function updateImagePreview(url) {
-      const img = document.getElementById('modalImgPreview');
-      const placeholder = document.getElementById('modalImgPlaceholder');
-      if (url && url.trim().startsWith('http')) {
-        img.src = url.trim();
-        img.classList.remove('hidden');
-        placeholder.classList.add('hidden');
+    function openAddModal(item = null) {
+      document.getElementById('itemForm').reset();
+      document.getElementById('searchDropdown').classList.add('hidden');
+      document.getElementById('smartStatus').classList.add('hidden');
+      if (item) {
+        document.getElementById('modalTitle').textContent = 'İsteği Düzenle';
+        document.getElementById('editId').value = item.id;
+        document.getElementById('fTitle').value = item.title;
+        document.getElementById('fPrice').value = item.price || '';
+        document.getElementById('fCategory').value = item.category || '';
+        document.getElementById('fTag').value = item.tag || 'Yakın Zamanda';
+        document.getElementById('fLink').value = item.link || '';
+        document.getElementById('fImage').value = item.image || '';
+        document.getElementById('fNeed').value = item.need || 5;
+        document.getElementById('fWant').value = item.want || 5;
+        document.getElementById('fUrgency').value = item.urgency || 3;
       } else {
-        img.classList.add('hidden');
-        placeholder.classList.remove('hidden');
+        document.getElementById('modalTitle').textContent = 'Yeni İstek Ekle';
+        document.getElementById('editId').value = '';
       }
+      updateRangeLabels();
+      document.getElementById('itemModal').classList.remove('hidden');
     }
 
-    function saveItem(event) {
-      event.preventDefault();
-      const id = document.getElementById('itemId').value;
-      const imageUrl = document.getElementById('itemImageUrl').value.trim();
+    function closeAddModal() {
+      document.getElementById('itemModal').classList.add('hidden');
+    }
 
-      const itemData = {
-        title: document.getElementById('itemTitle').value.trim(),
-        tagId: document.getElementById('itemTag').value,
-        category: document.getElementById('itemCategory').value,
-        price: Number(document.getElementById('itemPrice').value) || 0,
-        url: document.getElementById('itemUrl').value.trim(),
-        imageUrl: imageUrl,
-        desire: Number(document.getElementById('itemDesire').value),
-        need: Number(document.getElementById('itemNeed').value),
-        urgency: Number(document.getElementById('itemUrgency').value),
-        note: document.getElementById('itemNote').value.trim()
+    async function saveItem(e) {
+      e.preventDefault();
+      const editId = document.getElementById('editId').value;
+      const existing = editId ? items.find(x => x.id === editId) : null;
+
+      const itemObj = {
+        id: editId || 'item_' + Date.now(),
+        title: document.getElementById('fTitle').value.trim(),
+        price: Number(document.getElementById('fPrice').value) || 0,
+        category: document.getElementById('fCategory').value.trim() || 'Genel',
+        tag: document.getElementById('fTag').value,
+        link: document.getElementById('fLink').value.trim(),
+        image: document.getElementById('fImage').value.trim(),
+        need: Number(document.getElementById('fNeed').value),
+        want: Number(document.getElementById('fWant').value),
+        urgency: Number(document.getElementById('fUrgency').value),
+        purchased: existing ? existing.purchased : false
       };
 
-      if (id) {
-        const idx = appState.items.findIndex(i => i.id === id);
-        if (idx !== -1) {
-          appState.items[idx] = { ...appState.items[idx], ...itemData };
-        }
-        showToast('Ürün güncellendi.');
+      if (editId) {
+        items = items.map(x => x.id === editId ? itemObj : x);
       } else {
-        appState.items.push({
-          id: 'item-' + Date.now(),
-          ...itemData,
-          purchased: false,
-          createdAt: Date.now()
-        });
-        showToast('Yeni ürün panona eklendi!');
+        items.unshift(itemObj);
       }
 
-      if (imageUrl) cacheSingleImage(imageUrl);
-
-      saveState();
-      closeModal('itemModal');
-      renderAll();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      closeAddModal();
+      renderItems();
+      await syncItemToCloud(itemObj);
     }
 
-    function quickChangeItemTag(id, newTagId) {
-      const item = appState.items.find(i => i.id === id);
-      if (!item) return;
-      item.tagId = newTagId;
-      saveState();
-      renderAll();
-      showToast('Öncelik etiketi güncellendi.');
+    async function togglePurchased(id) {
+      let updated = null;
+      items = items.map(item => {
+        if (item.id === id) {
+          updated = { ...item, purchased: !item.purchased };
+          return updated;
+        }
+        return item;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      renderItems();
+      if (updated) await syncItemToCloud(updated);
     }
 
-    function togglePurchased(id) {
-      const item = appState.items.find(i => i.id === id);
-      if (!item) return;
-      item.purchased = !item.purchased;
-      saveState();
-      renderAll();
-      showToast(item.purchased ? 'Harika! Ürün "Aldım" olarak işaretlendi.' : 'Ürün tekrar listeye alındı.');
+    async function deleteItem(id) {
+      if (!confirm('Bu ürünü listenden silmek istediğine emin misin?')) return;
+      items = items.filter(x => x.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      renderItems();
+      await deleteItemFromCloud(id);
     }
 
-    function deleteItem(id) {
-      appState.items = appState.items.filter(i => i.id !== id);
-      saveState();
-      renderAll();
-      showToast('Ürün silindi.');
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.dataset.filter === filter) {
+          btn.className = 'filter-btn active px-3.5 py-1.5 rounded-full text-xs font-semibold bg-ink text-white transition';
+        } else {
+          btn.className = 'filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white border border-[#E5DFD5] text-muted hover:text-ink transition';
+        }
+      });
+      renderItems();
     }
 
-    // -------------------------------------------------------------------------
-    // 5. ÖZEL ETİKET YÖNETİMİ
-    // -------------------------------------------------------------------------
-    function renderTagsManagerList() {
-      const container = document.getElementById('tagsListContainer');
-      container.innerHTML = appState.tags.map(tag => {
-        const badgeCls = TAG_COLOR_STYLES[tag.color] || TAG_COLOR_STYLES.sky;
-        const isDefault = DEFAULT_TAGS.some(d => d.id === tag.id);
+    function renderItems() {
+      const grid = document.getElementById('itemsGrid');
+      const empty = document.getElementById('emptyState');
+      const catSelect = document.getElementById('categoryFilter');
+      const selectedCat = catSelect.value;
+
+      const categories = [...new Set(items.map(i => i.category).filter(Boolean))];
+      catSelect.innerHTML = '<option value="ALL">Tüm Kategoriler</option>' +
+        categories.map(c => `<option value="${c}" ${c === selectedCat ? 'selected' : ''}>${c}</option>`).join('');
+
+      const activeItems = items.filter(i => !i.purchased);
+      const purchasedItems = items.filter(i => i.purchased);
+      document.getElementById('statActiveCount').textContent = activeItems.length;
+      document.getElementById('statActiveTotal').textContent = activeItems.reduce((s, i) => s + (Number(i.price) || 0), 0).toLocaleString('tr-TR') + ' ₺';
+      document.getElementById('statUrgentCount').textContent = activeItems.filter(i => i.tag === 'Acil Alınacak').length;
+      document.getElementById('statPurchasedCount').textContent = purchasedItems.length;
+
+      let filtered = items.filter(item => {
+        if (currentFilter === 'PURCHASED') return item.purchased;
+        if (item.purchased) return false;
+        if (currentFilter !== 'ALL' && item.tag !== currentFilter) return false;
+        if (selectedCat !== 'ALL' && item.category !== selectedCat) return false;
+        return true;
+      });
+
+      filtered.sort((a, b) => calculateScore(b) - calculateScore(a));
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      grid.innerHTML = filtered.map((item, idx) => {
+        const score = calculateScore(item);
+        const tagClass = TAG_STYLES[item.tag] || TAG_STYLES['Yakın Zamanda'];
+        const imgHtml = item.image
+          ? `<img src="${item.image}" alt="${item.title}" class="w-full h-44 object-contain bg-white p-3 border-b border-[#F0EAE1]" onerror="this.outerHTML='<div class=\\'w-full h-44 bg-sand/60 flex items-center justify-center text-muted text-xs border-b border-[#F0EAE1]\\'>Görsel Yüklenemedi</div>'" />`
+          : `<div class="w-full h-44 bg-sand/60 flex items-center justify-center text-muted text-xs border-b border-[#F0EAE1]">Görsel Eklenmedi</div>`;
+
         return `
-          <div class="flex items-center justify-between p-3 rounded-xl bg-cream border border-sandBorder">
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-0.5 rounded-lg border text-xs font-semibold ${badgeCls}">${escapeHtml(tag.name)}</span>
-              <span class="text-xs text-mutedInk">Ağırlık: ${tag.priorityWeight}/10</span>
+          <div class="bg-white rounded-3xl border border-[#EAE4DA] overflow-hidden card-shadow flex flex-col justify-between transition hover:-translate-y-0.5 ${item.purchased ? 'opacity-70' : ''}">
+            <div>
+              <div class="relative">
+                ${imgHtml}
+                <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-bold bg-ink/85 text-white backdrop-blur-sm">
+                  #${idx + 1} · Skor ${score}
+                </span>
+                <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${tagClass} backdrop-blur-sm">
+                  ${item.tag}
+                </span>
+              </div>
+
+              <div class="p-4">
+                <div class="text-[11px] font-semibold text-sage uppercase tracking-wider">${item.category || 'Genel'}</div>
+                <h3 class="font-semibold text-base text-ink mt-0.5 line-clamp-2 ${item.purchased ? 'line-through' : ''}">${item.title}</h3>
+                <div class="text-lg font-bold text-ink mt-2">${item.price ? Number(item.price).toLocaleString('tr-TR') + ' ₺' : 'Fiyat Belirtilmedi'}</div>
+
+                <div class="flex items-center gap-3 mt-3 pt-3 border-t border-[#F3EFE8] text-[11px] text-muted">
+                  <span>İhtiyaç: <strong class="text-ink">${item.need}/10</strong></span>
+                  <span>Heves: <strong class="text-ink">${item.want}/10</strong></span>
+                  <span>Aciliyet: <strong class="text-ink">${item.urgency}/5</strong></span>
+                </div>
+              </div>
             </div>
-            ${!isDefault ? `
-              <button onclick="deleteCustomTag('${tag.id}')" class="text-xs text-rose-600 hover:underline font-medium">Sil</button>
-            ` : `<span class="text-[11px] text-mutedInk">Varsayılan</span>`}
+
+            <div class="px-4 pb-4 flex items-center justify-between gap-2">
+              <button onclick="togglePurchased('${item.id}')" class="flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition ${item.purchased ? 'bg-sand text-ink' : 'bg-sage/15 text-sageDark hover:bg-sage hover:text-white'}">
+                ${item.purchased ? '↩️ Geri Al' : '✓ Alındı'}
+              </button>
+              ${item.link ? `<a href="${item.link}" target="_blank" rel="noopener" class="py-2 px-3 rounded-xl bg-sand text-ink text-xs font-semibold hover:opacity-80 transition">Link ↗</a>` : ''}
+              <button onclick='openAddModal(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="p-2 rounded-xl bg-sand text-ink text-xs hover:opacity-80" title="Düzenle">✎</button>
+              <button onclick="deleteItem('${item.id}')" class="p-2 rounded-xl bg-rose-50 text-rose-600 text-xs hover:bg-rose-100" title="Sil">✕</button>
+            </div>
           </div>
         `;
       }).join('');
     }
 
-    function addNewTag(event) {
-      event.preventDefault();
-      const name = document.getElementById('newTagName').value.trim();
-      const color = document.getElementById('newTagColor').value;
-      const priorityWeight = Math.max(1, Math.min(10, Number(document.getElementById('newTagWeight').value) || 5));
-      if (!name) return;
-
-      appState.tags.push({
-        id: 'tag-' + Date.now(),
-        name,
-        color,
-        priorityWeight
-      });
-      document.getElementById('newTagName').value = '';
-      saveState();
-      populateTagSelects();
-      renderAll();
-      showToast(`"${name}" etiketi eklendi.`);
+    function openBackupModal() {
+      document.getElementById('backupModal').classList.remove('hidden');
     }
 
-    function deleteCustomTag(tagId) {
-      appState.tags = appState.tags.filter(t => t.id !== tagId);
-      const fallbackId = appState.tags[0]?.id || 'soon';
-      appState.items.forEach(item => {
-        if (item.tagId === tagId) item.tagId = fallbackId;
-      });
-      if (activeFilter === tagId) activeFilter = 'ALL';
-      saveState();
-      populateTagSelects();
-      renderAll();
-      showToast('Etiket silindi.');
+    function closeBackupModal() {
+      document.getElementById('backupModal').classList.add('hidden');
     }
 
-    // -------------------------------------------------------------------------
-    // 6. FORMÜL MOTORU
-    // -------------------------------------------------------------------------
-    function syncFormulaModalUI() {
-      const f = appState.formula;
-      document.getElementById('wNeed').value = f.wNeed;
-      document.getElementById('wDesire').value = f.wDesire;
-      document.getElementById('wUrgency').value = f.wUrgency;
-      document.getElementById('wTag').value = f.wTag;
-      document.getElementById('wPrice').value = f.wPrice;
-      document.getElementById('customExpressionInput').value = f.customExpression || DEFAULT_FORMULA.customExpression;
-
-      updateFormulaLabelsOnly();
-      setFormulaMode(f.mode || 'weights', false);
-    }
-
-    function setFormulaMode(mode, shouldSave = true) {
-      appState.formula.mode = mode;
-      const weightsSec = document.getElementById('weightsFormulaSection');
-      const customSec = document.getElementById('customFormulaSection');
-      const btnW = document.getElementById('fModeWeightsBtn');
-      const btnC = document.getElementById('fModeCustomBtn');
-
-      if (mode === 'custom') {
-        weightsSec.classList.add('hidden');
-        customSec.classList.remove('hidden');
-        btnC.className = 'flex-1 py-2 rounded-lg text-xs font-bold bg-white text-ink shadow-xs transition';
-        btnW.className = 'flex-1 py-2 rounded-lg text-xs font-medium text-mutedInk hover:text-ink transition';
-      } else {
-        customSec.classList.add('hidden');
-        weightsSec.classList.remove('hidden');
-        btnW.className = 'flex-1 py-2 rounded-lg text-xs font-bold bg-white text-ink shadow-xs transition';
-        btnC.className = 'flex-1 py-2 rounded-lg text-xs font-medium text-mutedInk hover:text-ink transition';
-      }
-
-      if (shouldSave) {
-        saveState();
-        renderGrid();
-      }
-    }
-
-    function updateFormulaLabelsOnly() {
-      const f = appState.formula;
-      document.getElementById('wNeedLabel').textContent = `${f.wNeed}x`;
-      document.getElementById('wDesireLabel').textContent = `${f.wDesire}x`;
-      document.getElementById('wUrgencyLabel').textContent = `${f.wUrgency}x`;
-      document.getElementById('wTagLabel').textContent = `+${f.wTag} puan`;
-      document.getElementById('wPriceLabel').textContent = f.wPrice === 0 ? 'Kapalı (0)' : `${f.wPrice}`;
-
-      document.getElementById('fTextNeed').textContent = f.wNeed;
-      document.getElementById('fTextDesire').textContent = f.wDesire;
-      document.getElementById('fTextUrgency').textContent = f.wUrgency;
-      document.getElementById('fTextTag').textContent = `+${f.wTag}`;
-      document.getElementById('fTextPrice').textContent = f.wPrice;
-    }
-
-    function updateFormulaFromSliders() {
-      appState.formula.wNeed = Number(document.getElementById('wNeed').value);
-      appState.formula.wDesire = Number(document.getElementById('wDesire').value);
-      appState.formula.wUrgency = Number(document.getElementById('wUrgency').value);
-      appState.formula.wTag = Number(document.getElementById('wTag').value);
-      appState.formula.wPrice = Number(document.getElementById('wPrice').value);
-
-      updateFormulaLabelsOnly();
-      saveState();
-      renderGrid();
-    }
-
-    function saveCustomExpression() {
-      const expr = document.getElementById('customExpressionInput').value;
-      const statusEl = document.getElementById('customFormulaStatus');
-      try {
-        const fn = new Function('ihtiyac', 'heves', 'aciliyet', 'etiketBonus', 'fiyat', `return (${expr});`);
-        const test = fn(7, 8, 6, 10, 15000);
-        if (isNaN(Number(test))) throw new Error('NaN');
-        appState.formula.customExpression = expr;
-        statusEl.textContent = `Formül geçerli (Örnek skor: ${Math.round(Math.max(1, Math.min(100, test)))}/100)`;
-        statusEl.className = 'text-xs font-medium text-sage';
-        saveState();
-        renderGrid();
-      } catch (e) {
-        statusEl.textContent = 'Formül yazımını kontrol edin...';
-        statusEl.className = 'text-xs font-medium text-terracotta';
-      }
-    }
-
-    function resetFormulaDefaults() {
-      appState.formula = { ...DEFAULT_FORMULA };
-      syncFormulaModalUI();
-      saveState();
-      renderGrid();
-      showToast('Formül varsayılana döndürüldü.');
-    }
-
-    // -------------------------------------------------------------------------
-    // 7. JSON DIŞA / İÇE AKTARMA
-    // -------------------------------------------------------------------------
-    function exportBackupJSON() {
-      const dataStr = JSON.stringify(appState, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
-      const dateTag = new Date().toISOString().slice(0, 10);
-      a.href = url;
-      a.download = `istek-panom-${dateTag}.json`;
-      document.body.appendChild(a);
+      a.href = URL.createObjectURL(blob);
+      a.download = `istek-panosu-yedek-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast('JSON yedeği indirildi!');
     }
 
-    function importBackupJSON(event) {
+    function importJson(event) {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = function (e) {
+      reader.onload = async (e) => {
         try {
           const imported = JSON.parse(e.target.result);
-          if (!imported || !Array.isArray(imported.items)) {
-            throw new Error('Geçersiz dosya');
+          if (Array.isArray(imported)) {
+            items = imported;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+            renderItems();
+            await syncItemToCloud(items);
+            closeBackupModal();
+            alert('Yedek başarıyla yüklendi!');
           }
-          appState = {
-            tags: Array.isArray(imported.tags) && imported.tags.length ? imported.tags : JSON.parse(JSON.stringify(DEFAULT_TAGS)),
-            formula: { ...DEFAULT_FORMULA, ...(imported.formula || {}) },
-            items: imported.items
-          };
-          saveState();
-          syncFormulaModalUI();
-          populateTagSelects();
-          cacheAllItemImages();
-          renderAll();
-          closeModal('backupModal');
-          showToast('JSON yedeği başarıyla geri yüklendi!');
-        } catch (err) {
-          showToast('Geçersiz JSON dosyası.', 'error');
+        } catch (_) {
+          alert('Geçersiz JSON dosyası.');
         }
       };
       reader.readAsText(file);
     }
 
-    // -------------------------------------------------------------------------
-    // 8. GÖRSEL ÖNBELLEĞİ & PWA (MANIFEST + SERVICE WORKER)
-    // -------------------------------------------------------------------------
-    async function cacheSingleImage(url) {
-      if (!url || !('caches' in window)) return;
-      try {
-        const cache = await caches.open(IMAGE_CACHE_NAME);
-        const match = await cache.match(url);
-        if (!match) {
-          const req = new Request(url, { mode: 'no-cors' });
-          const res = await fetch(req);
-          await cache.put(url, res);
-        }
-      } catch (e) {}
-    }
-
-    function cacheAllItemImages() {
-      appState.items.forEach(item => {
-        if (item.imageUrl) cacheSingleImage(item.imageUrl);
-      });
-    }
-
-    function getManifestObject() {
-      const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#2F6F5E"/><path d="M256 120l34 102 102 34-102 34-34 102-34-102-102-34 102-34z" fill="#FAF8F5"/></svg>`;
-      const iconDataUri = `data:image/svg+xml;base64,${btoa(iconSvg)}`;
-
-      return {
-        name: 'İstek Panom — Kişisel Karar & Öncelik Listesi',
-        short_name: 'İstek Panom',
-        description: 'Kişisel İstek Listesi ve Akıllı Öncelik Sıralaması',
-        start_url: './index.html',
-        display: 'standalone',
-        background_color: '#FAF8F5',
-        theme_color: '#FAF8F5',
-        orientation: 'portrait-primary',
-        icons: [
-          {
-            src: iconDataUri,
-            sizes: '192x192',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          },
-          {
-            src: iconDataUri,
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          }
-        ]
-      };
-    }
-
-    function getServiceWorkerCode() {
-      return `const CACHE_NAME = 'istek-panom-shell-v1';
-const IMAGE_CACHE = '${IMAGE_CACHE_NAME}';
-const CORE_ASSETS = ['./', './index.html', './manifest.json'];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => {})
-  );
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => k !== CACHE_NAME && k !== IMAGE_CACHE)
-          .map((k) => caches.delete(k))
-      )
-    )
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-
-  if (req.destination === 'image') {
-    event.respondWith(
-      caches.open(IMAGE_CACHE).then(async (cache) => {
-        const cached = await cache.match(req);
-        if (cached) return cached;
-        try {
-          const fresh = await fetch(req);
-          cache.put(req, fresh.clone());
-          return fresh;
-        } catch (err) {
-          return cached || Response.error();
-        }
-      })
-    );
-    return;
-  }
-
-  event.respondWith(
-    fetch(req)
-      .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-        return res;
-      })
-      .catch(() => caches.match(req))
-  );
-});`;
-    }
-
-    function setupDynamicPWA() {
-      try {
-        const manifestBlob = new Blob([JSON.stringify(getManifestObject(), null, 2)], {
-          type: 'application/manifest+json'
-        });
-        const manifestURL = URL.createObjectURL(manifestBlob);
-        const link = document.createElement('link');
-        link.rel = 'manifest';
-        link.href = manifestURL;
-        document.head.appendChild(link);
-      } catch (e) {}
-
-      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
-      }
-
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredInstallPrompt = e;
-        const btn = document.getElementById('installPromptBtn');
-        btn.classList.remove('hidden');
-        btn.classList.add('inline-flex');
-      });
-    }
-
-    async function triggerNativeInstall() {
-      if (!deferredInstallPrompt) {
-        openModal('pwaDeployModal');
-        return;
-      }
-      deferredInstallPrompt.prompt();
-      const { outcome } = await deferredInstallPrompt.userChoice;
-      if (outcome === 'accepted') {
-        document.getElementById('installPromptBtn').classList.add('hidden');
-        showToast('Uygulama ana ekranına kuruluyor!');
-      }
-      deferredInstallPrompt = null;
-    }
-
-    function switchDeployTab(tab) {
-      currentDeployTab = tab;
-      ['index', 'manifest', 'sw'].forEach(t => {
-        const el = document.getElementById(`tab-${t}`);
-        if (t === tab) {
-          el.className = 'deploy-tab px-3.5 py-1.5 rounded-xl bg-sage text-white font-semibold';
-        } else {
-          el.className = 'deploy-tab px-3.5 py-1.5 rounded-xl bg-warmGray text-ink font-medium';
-        }
-      });
-
-      const codeBox = document.getElementById('deployCodeBox');
-      const desc = document.getElementById('deployFileDesc');
-
-      if (tab === 'index') {
-        desc.textContent = 'Ana uygulama dosyası (GitHub Pages için manifest.json bağlantısı hazır).';
-        let fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-        fullHtml = fullHtml.replace(/<link rel="manifest" href="blob:[^"]+">/, '<link rel="manifest" href="./manifest.json" />');
-        codeBox.value = fullHtml;
-      } else if (tab === 'manifest') {
-        desc.textContent = 'Telefonların uygulamayı tam ekran (standalone) tanıması için PWA kimlik dosyası.';
-        codeBox.value = JSON.stringify(getManifestObject(), null, 2);
-      } else if (tab === 'sw') {
-        desc.textContent = 'Uygulamayı ve yapıştırdığın ürün görsellerini çevrimdışı önbellekte tutan Service Worker dosyası.';
-        codeBox.value = getServiceWorkerCode();
-      }
-    }
-
-    function copyDeployCode() {
-      const box = document.getElementById('deployCodeBox');
-      box.select();
-      box.setSelectionRange(0, 999999);
-      try {
-        document.execCommand('copy');
-        showToast('Kod panoya kopyalandı!');
-      } catch (e) {
-        showToast('Kopyalama başarısız oldu.', 'error');
-      }
-    }
-
-    function downloadDeployFile() {
-      const content = document.getElementById('deployCodeBox').value;
-      const fileMap = {
-        index: { name: 'index.html', type: 'text/html' },
-        manifest: { name: 'manifest.json', type: 'application/manifest+json' },
-        sw: { name: 'sw.js', type: 'application/javascript' }
-      };
-      const target = fileMap[currentDeployTab];
-      const blob = new Blob([content], { type: target.type });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = target.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast(`${target.name} indirildi!`);
-    }
-
-    // -------------------------------------------------------------------------
-    // 9. MODAL & BİLDİRİM YARDIMCILARI
-    // -------------------------------------------------------------------------
-    function openModal(id) {
-      if (id === 'pwaDeployModal') switchDeployTab('index');
-      if (id === 'tagsModal') renderTagsManagerList();
-      const el = document.getElementById(id);
-      el.classList.remove('hidden');
-      el.classList.add('flex');
-    }
-
-    function closeModal(id) {
-      const el = document.getElementById(id);
-      el.classList.add('hidden');
-      el.classList.remove('flex');
-    }
-
-    function showToast(message, type = 'success') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      const accent = type === 'error' ? 'border-rose-300 text-rose-700' : 'border-sage/30 text-ink';
-      toast.className = `pointer-events-auto w-full bg-white border ${accent} px-4 py-3 rounded-2xl shadow-lg text-xs font-medium flex items-center justify-between gap-2 transition-all duration-300`;
-      toast.innerHTML = `<span>${escapeHtml(message)}</span><span class="text-sage font-bold">✓</span>`;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(8px)';
-        setTimeout(() => toast.remove(), 300);
-      }, 2800);
-    }
-
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    document.querySelectorAll('[id$="Modal"]').forEach(modal => {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal(modal.id);
-      });
-    });
-
-    window.addEventListener('DOMContentLoaded', initApp);
+    renderItems();
+    syncFromCloud();
   </script>
 </body>
 </html>
