@@ -1,21 +1,86 @@
 // api/product.js
 export default async function handler(req, res) {
-  // GitHub Pages'ten gelen isteklere izin ver (CORS)
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-sync-pin');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const SYNC_PIN = process.env.SYNC_PIN || '';
+
+  const sbFetch = async (path, options = {}) => {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      ...options,
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+        ...(options.headers || {})
+      }
+    });
+    const text = await response.text();
+    return { ok: response.ok, status: response.status, data: text ? JSON.parse(text) : null };
+  };
+
+  const { action, url, q, id } = req.query;
+
+  // 1. SUPABASE VERİTABANI İŞLEMLERİ
+  if (action === 'list' || req.method === 'POST' || req.method === 'DELETE') {
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+      return res.status(500).json({ ok: false, error: 'Vercel üzerinde SUPABASE_URL ve SUPABASE_SERVICE_ROLE_KEY eksik.' });
+    }
+
+    if (SYNC_PIN && req.headers['x-sync-pin'] !== SYNC_PIN) {
+      return res.status(401).json({ ok: false, error: 'Hatalı Senkronizasyon PIN kodu.' });
+    }
+
+    if (req.method === 'GET' && action === 'list') {
+      const result = await sbFetch('wishlist_items?select=*&order=created_at.desc');
+      return res.status(result.ok ? 200 : 500).json({ ok: result.ok, items: result.data || [] });
+    }
+
+    if (req.method === 'POST') {
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      const itemsToSave = Array.isArray(body) ? body : [body];
+
+      const formatted = itemsToSave.map(item => ({
+        id: String(item.id),
+        title: item.title,
+        price: Number(item.price) || 0,
+        image: item.image || '',
+        link: item.link || '',
+        category: item.category || 'Genel',
+        tag: item.tag || 'Yakın Zamanda',
+        want: Number(item.want) || 5,
+        need: Number(item.need) || 5,
+        urgency: Number(item.urgency) || 3,
+        purchased: Boolean(item.purchased)
+      }));
+
+      const result = await sbFetch('wishlist_items?on_conflict=id', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify(formatted)
+      });
+
+      return res.status(result.ok ? 200 : 500).json({ ok: result.ok, data: result.data });
+    }
+
+    if (req.method === 'DELETE' && id) {
+      const result = await sbFetch(`wishlist_items?id=eq.${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+      return res.status(result.ok ? 200 : 500).json({ ok: result.ok });
+    }
   }
 
-  const { url, q } = req.query;
-
-  // 1. DURUM: Canlı Arama & Tahmini Seçenekler (?q=airpods pro 3)
+  // 2. CANLI ARAMA ÖNERİLERİ (?q=...)
   if (q) {
     try {
       const query = encodeURIComponent(q.trim());
-      // Google / DuckDuckGo canlı arama önerileri + görsel arama sonuçları
       const [suggestRes, ddgRes] = await Promise.allSettled([
         fetch(`https://suggestqueries.google.com/complete/search?client=firefox&hl=tr&q=${query}`),
         fetch(`https://duckduckgo.com/ac/?q=${query}&kl=tr-tr`)
@@ -28,15 +93,10 @@ export default async function handler(req, res) {
       }
       if (ddgRes.status === 'fulfilled' && ddgRes.value.ok) {
         const data = await ddgRes.value.json();
-        if (Array.isArray(data)) {
-          suggestions.push(...data.map(item => item.phrase));
-        }
+        if (Array.isArray(data)) suggestions.push(...data.map(item => item.phrase));
       }
 
-      // Tekrarları temizle ve ilk 6 öneriyi al
       const uniqueSuggestions = [...new Set(suggestions)].slice(0, 6);
-
-      // En iyi eşleşme için Bing/Web görsel önizleme URL'i oluştur
       const items = uniqueSuggestions.map(title => ({
         title,
         image: `https://tse2.mm.bing.net/th?q=${encodeURIComponent(title)}&w=400&h=400&c=7&rs=1&p=0`,
@@ -49,7 +109,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // 2. DURUM: Ürün Linkinden Görsel, Başlık ve Fiyat Çekme (?url=https://...)
+  // 3. ÜRÜN LİNKİNDEN GÖRSEL, BAŞLIK VE FİYAT ÇEKME (?url=...)
   if (url) {
     try {
       const targetUrl = new URL(url).toString();
@@ -62,45 +122,34 @@ export default async function handler(req, res) {
       });
 
       const html = await response.text();
+      const decodeHtml = (str) =>
+        str.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 
       const getMeta = (prop) => {
-        const regex1 = new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i');
-        const regex2 = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${prop}["']`, 'i');
-        const match = html.match(regex1) || html.match(regex2);
-        return match ? decodeHtml(match[1]) : '';
+        const r1 = new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i');
+        const r2 = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${prop}["']`, 'i');
+        const m = html.match(r1) || html.match(r2);
+        return m ? decodeHtml(m[1]) : '';
       };
-
-      const decodeHtml = (str) =>
-        str.replace(/&amp;/g, '&')
-           .replace(/&quot;/g, '"')
-           .replace(/&#39;/g, "'")
-           .replace(/&lt;/g, '<')
-           .replace(/&gt;/g, '>');
 
       let title = getMeta('og:title') || getMeta('twitter:title') || '';
       let image = getMeta('og:image') || getMeta('twitter:image') || '';
       let price = getMeta('product:price:amount') || getMeta('og:price:amount') || '';
 
-      // HTML <title> fallback
       if (!title) {
-        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-        if (titleMatch) title = decodeHtml(titleMatch[1].trim());
+        const tm = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        if (tm) title = decodeHtml(tm[1].trim());
       }
 
-      // JSON-LD (Schema.org Product) içinden daha temiz başlık, görsel ve fiyat yakalama
       const jsonLdMatches = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
       for (const block of jsonLdMatches) {
         try {
-          const rawJson = block.replace(/<script[^>]*>|<\/script>/gi, '').trim();
-          const parsed = JSON.parse(rawJson);
+          const parsed = JSON.parse(block.replace(/<script[^>]*>|<\/script>/gi, '').trim());
           const list = Array.isArray(parsed) ? parsed : (parsed['@graph'] ? parsed['@graph'] : [parsed]);
           const product = list.find(x => x['@type'] === 'Product' || (Array.isArray(x['@type']) && x['@type'].includes('Product')));
-
           if (product) {
             if (product.name) title = decodeHtml(product.name);
-            if (product.image) {
-              image = Array.isArray(product.image) ? product.image[0] : (product.image.url || product.image);
-            }
+            if (product.image) image = Array.isArray(product.image) ? product.image[0] : (product.image.url || product.image);
             if (product.offers) {
               const offer = Array.isArray(product.offers) ? product.offers[0] : product.offers;
               const rawPrice = offer.price || offer.lowPrice || '';
@@ -110,13 +159,11 @@ export default async function handler(req, res) {
         } catch (_) {}
       }
 
-      // Görsel göreli yol (/images/...) ise tam URL yap
       if (image && image.startsWith('/')) {
         const base = new URL(targetUrl);
         image = `${base.protocol}//${base.host}${image}`;
       }
 
-      // Fiyatı temiz sayıya çevir (Örn: "12.499,90" -> 12499.9)
       let numericPrice = 0;
       if (price) {
         const cleaned = String(price).replace(/[^\d.,]/g, '');
@@ -129,7 +176,6 @@ export default async function handler(req, res) {
         }
       }
 
-      // Site sonundaki gereksiz "- Trendyol", "| Hepsiburada" eklerini temizle
       title = title.replace(/\s*[-|•]\s*(Trendyol|Hepsiburada|Amazon\.com\.tr|n11|Akakçe|Çiçeksepeti).*$/i, '').trim();
 
       return res.status(200).json({
@@ -139,12 +185,9 @@ export default async function handler(req, res) {
         price: isNaN(numericPrice) ? 0 : Math.round(numericPrice)
       });
     } catch (err) {
-      return res.status(200).json({
-        ok: false,
-        error: 'Site bot koruması nedeniyle otomatik çekilemedi, bilgileri elle girebilirsin.'
-      });
+      return res.status(200).json({ ok: false, error: 'Site bot koruması nedeniyle otomatik çekilemedi.' });
     }
   }
 
-  return res.status(400).json({ ok: false, error: 'url veya q parametresi gerekli.' });
+  return res.status(400).json({ ok: false, error: 'Geçersiz istek.' });
 }
