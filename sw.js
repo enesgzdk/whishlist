@@ -1,9 +1,10 @@
-const CACHE_NAME = 'istek-panosu-v1';
+const CACHE_NAME = 'istek-panosu-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg'
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -24,18 +25,17 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  // Vercel API isteklerini önbelleğe alma, her zaman taze veri çek
+  if (event.request.url.includes('/api/')) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
-
       return fetch(event.request)
         .then((response) => {
           if (!response || response.status !== 200) return response;
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           return response;
         })
         .catch(() => caches.match('./index.html'));
