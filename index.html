@@ -85,11 +85,11 @@
     <!-- Özet Kartları -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
       <div class="bg-white rounded-2xl p-4 border border-[#EAE4DA] card-shadow">
-        <div class="text-xs text-muted font-medium">Aktif İstek</div>
+        <div id="statActiveLabel" class="text-xs text-muted font-medium truncate">Aktif İstek</div>
         <div id="statActiveCount" class="text-2xl font-bold text-ink mt-1">0</div>
       </div>
       <div class="bg-white rounded-2xl p-4 border border-[#EAE4DA] card-shadow">
-        <div class="text-xs text-muted font-medium">Aktif Liste Tutarı</div>
+        <div id="statTotalLabel" class="text-xs text-muted font-medium truncate">Aktif Liste Tutarı</div>
         <div id="statActiveTotal" class="text-2xl font-bold text-ink mt-1">0 ₺</div>
       </div>
       <div class="bg-white rounded-2xl p-4 border border-[#EAE4DA] card-shadow">
@@ -158,7 +158,7 @@
 
         <div>
           <label class="block text-xs font-semibold text-ink mb-1">Ürün Adı *</label>
-          <input id="fTitle" required type="text" placeholder="Örn: Sony WH-1000XM5" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5DFD5] text-sm focus:outline-none focus:border-sage" />
+          <input id="fTitle" required type="text" placeholder="Örn: Apple Air Tag" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5DFD5] text-sm focus:outline-none focus:border-sage" />
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -261,12 +261,9 @@
   </div>
 
   <script>
-    // =========================================================
-    // BURAYA KENDİ VERCEL ADRESİNİ VE SYNC_PIN ŞİFRENİ YAZ:
-    // =========================================================
     const DEFAULT_CONFIG = {
-      apiUrl: "https://whishlist-seven.vercel.app", // <-- Kendi Vercel URL'ni buraya yaz (sonunda / olmasın)
-      pin: "1453"                                    // <-- Vercel'de belirlediğin SYNC_PIN değerini buraya yaz
+      apiUrl: "https://whishlist-seven.vercel.app",
+      pin: "1453"
     };
 
     const STORAGE_KEY = 'istek_panosu_items_v1';
@@ -287,6 +284,21 @@
       'Sonra Alınır': 'bg-sage/15 text-sageDark border-sage/30',
       'Keyfi / Olsa da Olur': 'bg-stone-200/70 text-stone-700 border-stone-300'
     };
+
+    // Türkçe uyumlu Title Case (apple air tag -> Apple Air Tag)
+    function toTitleCase(str) {
+      if (!str) return '';
+      return str
+        .trim()
+        .split(/\s+/)
+        .map(word => {
+          if (word.length > 1 && word === word.toLocaleUpperCase('tr-TR') && /[A-ZÇĞİÖŞÜ]/.test(word)) {
+            return word;
+          }
+          return word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1).toLocaleLowerCase('tr-TR');
+        })
+        .join(' ');
+    }
 
     function calculateScore(item) {
       const need = Number(item.need) || 5;
@@ -395,15 +407,18 @@
           const res = await fetch(`${apiUrl}/api/product?q=${encodeURIComponent(trimmed)}`);
           const data = await res.json();
           if (data.ok && data.items && data.items.length) {
-            dropdown.innerHTML = data.items.map(s => `
-              <button type="button" onclick='selectSuggestion(${JSON.stringify(s).replace(/'/g, "&#39;")})' class="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-sand text-left transition">
-                <img src="${s.image}" class="w-10 h-10 rounded-lg object-cover bg-cream border border-[#E5DFD5]" onerror="this.style.display='none'" />
-                <div class="flex-1 min-w-0">
-                  <div class="text-xs font-semibold text-ink truncate">${s.title}</div>
-                  <div class="text-[11px] text-sage">Seç ve formu doldur</div>
-                </div>
-              </button>
-            `).join('');
+            dropdown.innerHTML = data.items.map(s => {
+              const formattedItem = { ...s, title: toTitleCase(s.title) };
+              return `
+                <button type="button" onclick='selectSuggestion(${JSON.stringify(formattedItem).replace(/'/g, "&#39;")})' class="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-sand text-left transition">
+                  <img src="${formattedItem.image}" class="w-10 h-10 rounded-lg object-cover bg-cream border border-[#E5DFD5]" onerror="this.style.display='none'" />
+                  <div class="flex-1 min-w-0">
+                    <div class="text-xs font-semibold text-ink truncate">${formattedItem.title}</div>
+                    <div class="text-[11px] text-sage">Seç ve formu doldur</div>
+                  </div>
+                </button>
+              `;
+            }).join('');
             dropdown.classList.remove('hidden');
           }
         } catch (_) {}
@@ -411,7 +426,7 @@
     }
 
     function selectSuggestion(item) {
-      document.getElementById('fTitle').value = item.title;
+      document.getElementById('fTitle').value = toTitleCase(item.title);
       document.getElementById('fImage').value = item.image;
       document.getElementById('fLink').value = item.searchUrl;
       document.getElementById('searchDropdown').classList.add('hidden');
@@ -432,7 +447,7 @@
           const data = await res.json();
           document.getElementById('fLink').value = val;
           if (data.ok) {
-            if (data.title) document.getElementById('fTitle').value = data.title;
+            if (data.title) document.getElementById('fTitle').value = toTitleCase(data.title);
             if (data.image) document.getElementById('fImage').value = data.image;
             if (data.price) document.getElementById('fPrice').value = data.price;
             status.textContent = data.price ? 'Başlık, görsel ve fiyat çekildi!' : 'Başlık ve görsel çekildi (fiyatı kontrol edebilirsin).';
@@ -466,7 +481,7 @@
       if (item) {
         document.getElementById('modalTitle').textContent = 'İsteği Düzenle';
         document.getElementById('editId').value = item.id;
-        document.getElementById('fTitle').value = item.title;
+        document.getElementById('fTitle').value = toTitleCase(item.title);
         document.getElementById('fPrice').value = item.price || '';
         document.getElementById('fCategory').value = item.category || '';
         document.getElementById('fTag').value = item.tag || 'Yakın Zamanda';
@@ -494,9 +509,9 @@
 
       const itemObj = {
         id: editId || 'item_' + Date.now(),
-        title: document.getElementById('fTitle').value.trim(),
+        title: toTitleCase(document.getElementById('fTitle').value),
         price: Number(document.getElementById('fPrice').value) || 0,
-        category: document.getElementById('fCategory').value.trim() || 'Genel',
+        category: toTitleCase(document.getElementById('fCategory').value) || 'Genel',
         tag: document.getElementById('fTag').value,
         link: document.getElementById('fLink').value.trim(),
         image: document.getElementById('fImage').value.trim(),
@@ -562,22 +577,38 @@
       catSelect.innerHTML = '<option value="ALL">Tüm Kategoriler</option>' +
         categories.map(c => `<option value="${c}" ${c === selectedCat ? 'selected' : ''}>${c}</option>`).join('');
 
-      const activeItems = items.filter(i => !i.purchased);
-      const purchasedItems = items.filter(i => i.purchased);
-      document.getElementById('statActiveCount').textContent = activeItems.length;
-      document.getElementById('statActiveTotal').textContent = activeItems.reduce((s, i) => s + (Number(i.price) || 0), 0).toLocaleString('tr-TR') + ' ₺';
-      document.getElementById('statUrgentCount').textContent = activeItems.filter(i => i.tag === 'Acil Alınacak').length;
-      document.getElementById('statPurchasedCount').textContent = purchasedItems.length;
-
       let filtered = items.filter(item => {
-        if (currentFilter === 'PURCHASED') return item.purchased;
-        if (item.purchased) return false;
-        if (currentFilter !== 'ALL' && item.tag !== currentFilter) return false;
+        if (currentFilter === 'PURCHASED') {
+          if (!item.purchased) return false;
+        } else {
+          if (item.purchased) return false;
+          if (currentFilter !== 'ALL' && item.tag !== currentFilter) return false;
+        }
         if (selectedCat !== 'ALL' && item.category !== selectedCat) return false;
         return true;
       });
 
       filtered.sort((a, b) => calculateScore(b) - calculateScore(a));
+
+      // Seçili kategori ve etikete göre dinamik toplam tutar ve adet hesabı
+      const activeItems = items.filter(i => !i.purchased);
+      const purchasedItems = items.filter(i => i.purchased);
+      const visibleTotal = filtered.reduce((s, i) => s + (Number(i.price) || 0), 0);
+
+      document.getElementById('statActiveLabel').textContent =
+        selectedCat !== 'ALL' ? `${selectedCat} Adedi` :
+        currentFilter === 'PURCHASED' ? 'Alınan Ürün' : 'Aktif İstek';
+      document.getElementById('statActiveCount').textContent =
+        (selectedCat !== 'ALL' || currentFilter !== 'ALL') ? filtered.length : activeItems.length;
+
+      document.getElementById('statTotalLabel').textContent =
+        selectedCat !== 'ALL' ? `${selectedCat} Tutarı` :
+        currentFilter === 'PURCHASED' ? 'Alınanlar Tutarı' :
+        currentFilter !== 'ALL' ? `${currentFilter} Tutarı` : 'Aktif Liste Tutarı';
+      document.getElementById('statActiveTotal').textContent = visibleTotal.toLocaleString('tr-TR') + ' ₺';
+
+      document.getElementById('statUrgentCount').textContent = activeItems.filter(i => i.tag === 'Acil Alınacak').length;
+      document.getElementById('statPurchasedCount').textContent = purchasedItems.length;
 
       if (filtered.length === 0) {
         grid.innerHTML = '';
@@ -589,8 +620,9 @@
       grid.innerHTML = filtered.map((item, idx) => {
         const score = calculateScore(item);
         const tagClass = TAG_STYLES[item.tag] || TAG_STYLES['Yakın Zamanda'];
+        const displayTitle = toTitleCase(item.title);
         const imgHtml = item.image
-          ? `<img src="${item.image}" alt="${item.title}" class="w-full h-44 object-contain bg-white p-3 border-b border-[#F0EAE1]" onerror="this.outerHTML='<div class=\\'w-full h-44 bg-sand/60 flex items-center justify-center text-muted text-xs border-b border-[#F0EAE1]\\'>Görsel Yüklenemedi</div>'" />`
+          ? `<img src="${item.image}" alt="${displayTitle}" class="w-full h-44 object-contain bg-white p-3 border-b border-[#F0EAE1]" onerror="this.outerHTML='<div class=\\'w-full h-44 bg-sand/60 flex items-center justify-center text-muted text-xs border-b border-[#F0EAE1]\\'>Görsel Yüklenemedi</div>'" />`
           : `<div class="w-full h-44 bg-sand/60 flex items-center justify-center text-muted text-xs border-b border-[#F0EAE1]">Görsel Eklenmedi</div>`;
 
         return `
@@ -608,7 +640,7 @@
 
               <div class="p-4">
                 <div class="text-[11px] font-semibold text-sage uppercase tracking-wider">${item.category || 'Genel'}</div>
-                <h3 class="font-semibold text-base text-ink mt-0.5 line-clamp-2 ${item.purchased ? 'line-through' : ''}">${item.title}</h3>
+                <h3 class="font-semibold text-base text-ink mt-0.5 line-clamp-2 ${item.purchased ? 'line-through' : ''}">${displayTitle}</h3>
                 <div class="text-lg font-bold text-ink mt-2">${item.price ? Number(item.price).toLocaleString('tr-TR') + ' ₺' : 'Fiyat Belirtilmedi'}</div>
 
                 <div class="flex items-center gap-3 mt-3 pt-3 border-t border-[#F3EFE8] text-[11px] text-muted">
