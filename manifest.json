@@ -2,7 +2,7 @@
   "name": "İstek Panosu",
   "short_name": "İstek Panosu",
   "description": "Kişisel istek listesi, karar matrisi ve öncelik sıralama panosu",
-  "start_url": "./index.html",
+  "start_url": "./index.html?v=3",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
